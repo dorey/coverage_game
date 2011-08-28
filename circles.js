@@ -63,7 +63,7 @@ var Circles = (function(){
         var yHemisphere = dy > cry,
             xDist = dx - crx,
             yMaxDist = Math.sqrt((crad * crad) - (xDist * xDist)),
-            yTargetVal = crx + ((yHemisphere ? 1 : -1) * yMaxDist);
+            yTargetVal = cry + ((yHemisphere ? 1 : -1) * yMaxDist);
         if(yHemisphere) {
             included = dy <= yTargetVal;
         } else {
