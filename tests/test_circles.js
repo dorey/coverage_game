@@ -61,7 +61,17 @@ test("Circles", function(){
         function randUnder(n) { return Math.floor(Math.random()*n); }
         for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
         Dots.makeDots.apply(this, l);
-    })(20);
+    });//(20);
+
+    (function addGridDots(x0, y0, xmax, ymax, spacing){
+        var l = [];
+        for(var x = x0; x <= xmax; x+= spacing) {
+            for(var y = y0; y <= ymax; y+= spacing) {
+                l.push([ x, y ]);
+            }
+        }
+        Dots.makeDots.apply(this, l);
+    })(0, 0, 100, 100, 10);
 
     var dotsInC2 = Dots.inCircle(c2);
     _.each(dotsInC2, function(dot, i, dots){
