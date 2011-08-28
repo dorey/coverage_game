@@ -13,8 +13,13 @@ function createNav(){
 
 module("Raphael Test", {
     setup: function(){
-        _.invoke([Nav, R(), Circles, Dots],
+        _.invoke([Nav, R(), Circles, Dots, Connectors, Events],
             'clear');
+        Events.listenForUpDownArrows(function(key, evt){
+            key === "up" && log("Up Key");
+            key === "down" && log("Down Key");
+            evt.preventDefault();
+        });
         Circles.init({ r: r, rd: rd });
         createNav();
     },

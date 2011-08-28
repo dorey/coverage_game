@@ -30,25 +30,30 @@ var Connectors = (function(){
         if (str !== undefined) { this.style = str; }
         return ConnectorStyles[this.style] || ConnectorStyles.normal;
     }
+
     function getDistanceBetweenCoords(coords) {
         var xDiff = Math.abs(coords[0][0] - coords[1][0]);
         var yDiff = Math.abs(coords[0][1] - coords[1][1]);
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     }
+    Connector.prototype._calcDistance = function(){
+        var coords = _.map(this.circles, function(circle, i){
+            return circle.xy;
+        });
+        this.distance = getDistanceBetweenCoords(coords);
+        return 'M' + _.invoke(coords, 'join', ',').join('L');
+    }
     Connector.prototype._createPath = function(){
-        if(this.circles.length == 2) {
-            var coords = _.map(this.circles, function(circle, i){
-                return circle.xy;
-            });
-            this.distance = getDistanceBetweenCoords(coords);
-            var coordStr = _.invoke(coords, 'join', ',');
-            var style = this.styleData();
-            this.path = R()
-                .path("M" + coordStr.join("L"))
-                .attr(style);
-        } else {
-            warn("Can't connect this number of circles");
-        }
+        var coordPath = this._calcDistance();
+        var style = this.styleData();
+        this.path = R()
+            .path(coordPath)
+            .attr(style);
+    }
+    Connector.prototype._updatePath = function(){
+        var coordPath = this._calcDistance();
+        this.path
+            .attr('path', coordPath);
     }
     Connector.prototype.draw = function(){
         if(this.path === undefined) {
@@ -64,7 +69,11 @@ var Connectors = (function(){
         c.draw();
         return c;
     }
+    function clear() {
+        connectors = {};
+    }
     return {
+        clear: clear,
         join: join
     }
 })();
@@ -121,9 +130,11 @@ var Circles = (function(){
         this.fill = o.fill;
         this.stroke = o.stroke;
         this._id = '_c' + ++cidCount;
+        this.connected = false;
         this.connectors = {};
     }
     Circle.prototype._addConnector = function(c) {
+        this.connected = true;
         this.connectors[c.id] = c;
     };
     Circle.prototype.isGrid = function(){
@@ -158,18 +169,14 @@ var Circles = (function(){
     }
     Circle.prototype.listenDrag = function() {
         function dragMove(dx, dy){
+            var newX = this.ox + dx,
+                newY = this.oy + dy;
             this.attr({
-                cx: this.ox + dx,
-                cy: this.oy + dy
+                cx: newX,
+                cy: newY
             });
-        }
-        function dragStart(){
-            this.cds = this.npO.containedDots();
-            this.ox = this.attr('cx');
-            this.oy = this.attr('cy');
-        }
-        function dragEnd(){
-            this.npO.xy = [this.attr('cx'), this.attr('cy')];
+            this.npO.xy = [newX, newY];
+            this.npO.connected && _.invoke(this.npO.connectors, '_updatePath');
             (function switchDots(circle){
                 var dotsInC2 = Dots.inCircle(circle);
                 _.each(Dots.list(), function(dot, i){
@@ -181,7 +188,14 @@ var Circles = (function(){
                     dot.update();
                 });
             })(this.npO);
-            log("End", this.npO);
+        }
+        function dragStart(){
+            this.cds = this.npO.containedDots();
+            this.ox = this.attr('cx');
+            this.oy = this.attr('cy');
+        }
+        function dragEnd(){
+            this.npO.xy = [this.attr('cx'), this.attr('cy')];
         }
         if(this.rc !== undefined) {
             this.rc.npO = this;
@@ -314,6 +328,27 @@ var Dots = (function(){
         makeDots: makeDots,
         inCircle: inCircle,
         list: list,
+        clear: clear
+    }
+})();
+
+var Events = (function(){
+    function listenForUpDownArrows(cb){
+        typeof cb === "function" && $('body').bind('keydown.updown', function(evt){
+            if(evt.keyCode === 38) {
+                cb.call(window, "up", evt)
+            } else if(evt.keyCode === 40) {
+                cb.call(window, "down", evt)
+            }
+        });
+    }
+
+    function clear() {
+        $('body').unbind('keydown.updown');
+    }
+
+    return {
+        listenForUpDownArrows: listenForUpDownArrows,
         clear: clear
     }
 })();
