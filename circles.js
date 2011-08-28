@@ -51,12 +51,9 @@ var Connectors = (function(){
     var connectors = {};
     function join(carr){
         var cjId = _.pluck(carr, '_id').sort().join('-');
-        if(connectors[cjId]===undefined) {
-            var c = new Connector(cjId, carr);
-            connectors[cjId] = c;
-            c.draw();
-        }
-        log(connectors[cjId]);
+        var c = new Connector(cjId, carr);
+        connectors[cjId] = c;
+        c.draw();
     }
     return {
         join: join
