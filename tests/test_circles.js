@@ -38,11 +38,13 @@ test("Grid Points", function(){
         xy: [50, 50],
         rad: 50
     });
+    var dotCount = 0;
     (function addGridDots(x0, y0, xmax, ymax, spacing){
         var l = [];
         for(var x = x0; x <= xmax; x+= spacing) {
             for(var y = y0; y <= ymax; y+= spacing) {
                 l.push([ x, y ]);
+                dotCount++;
             }
         }
         Dots.makeDots.apply(this, l);
@@ -53,6 +55,9 @@ test("Grid Points", function(){
         dot.style = "covered";
         dot.update();
     });
+
+    equal(dotCount, Dots.list().length, "There are the right number of dots being displayed.");
+    equal(81, circle.containedDots().length, "There are 81 dots in the sample circle");
 });
 
 test("Random Points", function(){

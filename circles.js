@@ -106,6 +106,9 @@ var Circles = (function(){
             .circle(this.xy[0], this.xy[1], this.rad)
             .attr(style);
     }
+    Circle.prototype.containedDots = function() {
+        return Dots.inCircle(this);
+    }
     function _inCircleCoords(crx, cry, crad, dx, dy) {
         var included = false;
 
@@ -220,9 +223,13 @@ var Dots = (function(){
     function clear() {
         DotList = [];
     }
+    function list() {
+        return DotList;
+    }
     return {
         makeDots: makeDots,
         inCircle: inCircle,
+        list: list,
         clear: clear
     }
 })();
