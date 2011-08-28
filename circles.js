@@ -97,12 +97,12 @@ var Circles = (function(){
 
 var DotStyles = {
     normal: {
-        stroke: '#8f2fc6',
-        fill: '#b796e0'
+        stroke: '#e9d5f4',
+        fill: '#f1eaf9'
     },
     covered: {
-        stroke: "#00f",
-        fill: "#00f"
+        stroke: "#8f2fc6",
+        fill: "#b796e0"
     }
 };
 
@@ -130,7 +130,7 @@ var Dots = (function(){
         var style = this.styleData();
         var hr = 1;
         this.d = R()
-            .circle(this.xy[0] - hr, this.xy[1] - hr, hr * 2)
+            .circle(this.xy[0], this.xy[1], hr * 2)
             .attr(style);
     }
     Dot.prototype.draw = function(){
@@ -149,17 +149,12 @@ var Dots = (function(){
             }));
         });
         _.invoke(DotList, 'draw');
-//        $(DotList).each(function(i,d){d.draw()});
     }
     function inCircle(c) {
         var x = c.xy[0],
             y = c.xy[1],
             rad = c.rad;
         var containedDots = [];
-        var xmax = x + rad,
-            xmin = x - rad,
-            ymax = y + rad,
-            ymin = y - rad;
         $(DotList).each(function(i, dot){
             var dx = dot.xy[0],
                 dy = dot.xy[1];
