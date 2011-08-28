@@ -11,6 +11,58 @@ var CircleStyles = {
     }
 };
 
+var ConnectorStyles = {
+    normal: {
+        stroke: '#f00'
+    }
+};
+
+var Connectors = (function(){
+    function Connector(id, circles, style){
+        this.id = id;
+        this.circles = circles;
+        this.style = style;
+    }
+    Connector.prototype.styleData = function(str) {
+        // if styleData receives a parameter, it sets the
+        // style string before returning the style data.
+        if (str !== undefined) { this.style = str; }
+        return ConnectorStyles[this.style] || ConnectorStyles.normal;
+    }
+    Connector.prototype._createPath = function(){
+        if(this.circles.length == 2) {
+            var coords = _.map(this.circles, function(circle, i){
+                return circle.xy.join(',');
+            });
+            var style = this.styleData();
+            this.path = R()
+                .path("M" + coords.join("L"))
+                .attr(style);
+        } else {
+            warn("Can't connect this number of circles");
+        }
+    }
+    Connector.prototype.draw = function(){
+        if(this.path === undefined) {
+            this._createPath();
+        }
+    }
+
+    var connectors = {};
+    function join(carr){
+        var cjId = _.pluck(carr, '_id').sort().join('-');
+        if(connectors[cjId]===undefined) {
+            var c = new Connector(cjId, carr);
+            connectors[cjId] = c;
+            c.draw();
+        }
+        log(connectors[cjId]);
+    }
+    return {
+        join: join
+    }
+})();
+
 var Circles = (function(){
     var circles = [],
         cidCount = 0;
@@ -31,7 +83,7 @@ var Circles = (function(){
         this._id = '_c' + ++cidCount;
     }
     Circle.prototype.styleData = function(str) {
-        // if styleData receives a parameter, it sets the 
+        // if styleData receives a parameter, it sets the
         // style string before returning the style data.
         if (str !== undefined) { this.style = str; }
         return CircleStyles[this.style] || CircleStyles.normal;
@@ -84,11 +136,15 @@ var Circles = (function(){
             return this.selected;
         });
     }
+    function clear() {
+        circles = [];
+    }
 
 	return {
 	    createCircle: createCircle,
 	    selectedCircles: selectedCircles,
 	    _inCircleCoords: _inCircleCoords,
+	    clear: clear,
 	    list: function(){
 	        return circles;
 	    }
@@ -121,7 +177,7 @@ var Dots = (function(){
         this.stroke = opts.stroke;
     }
     Dot.prototype.styleData = function(str) {
-        // if styleData receives a parameter, it sets the 
+        // if styleData receives a parameter, it sets the
         // style string before returning the style data.
         if (str !== undefined) { this.style = str; }
         return DotStyles[this.style] || DotStyles.normal;
@@ -164,8 +220,12 @@ var Dots = (function(){
         });
         return containedDots;
     }
+    function clear() {
+        DotList = [];
+    }
     return {
         makeDots: makeDots,
-        inCircle: inCircle
+        inCircle: inCircle,
+        clear: clear
     }
 })();
