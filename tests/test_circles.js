@@ -21,8 +21,8 @@ test("Circles", function(){
     equal(Modes.getMode(), 'addCircle', "Mode is properly set");
 
     var c = Circles.createCircle(r, {
-        xy: [50, 50],
-        rad: 12
+        xy: [450, 50],
+        rad: 10
     });
 
     function testInSimpleCircleCoords(dx, dy, shouldBe) {
@@ -52,16 +52,16 @@ test("Circles", function(){
     equal(Circles.selectedCircles().get(0)._id, c._id, "The circle is selected.");
 
     var c2 = Circles.createCircle(r, {
-        xy: [300, 100],
+        xy: [50, 50],
         rad: 50
     });
     
-    var l = [];
-    function randUnder(n) { return Math.floor(Math.random()*n); }
-    var dotCount = 0;
-    for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
-
-    Dots.makeDots.apply(this, l);
+    (function addRandomPoints(dotCount){
+        var l = [];
+        function randUnder(n) { return Math.floor(Math.random()*n); }
+        for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
+        Dots.makeDots.apply(this, l);
+    })(20);
 
     var dotsInC2 = Dots.inCircle(c2);
     _.each(dotsInC2, function(dot, i, dots){
