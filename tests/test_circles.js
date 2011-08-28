@@ -15,13 +15,14 @@ module("Raphael Test", {
     setup: function(){
         _.invoke([Nav, R(), Circles, Dots],
             'clear');
+        Circles.init({ r: r, rd: rd });
         createNav();
     },
     teardown: function(){}
 });
 
 test("Circles", function(){
-    var c = Circles.createCircle(r, {
+    var c = Circles.createCircle({
         xy: [450, 50],
         rad: 10
     });
@@ -34,7 +35,7 @@ test("Circles", function(){
 
 test("Grid Points", function(){
     equal(Circles.list().length, 0, "No circles");
-    var circle = Circles.createCircle(r, {
+    var circle = Circles.createCircle({
         xy: [50, 50],
         rad: 50
     });
@@ -71,10 +72,11 @@ test("Random Points", function(){
 
 test("Connect Circles", function(){
     var circles = [
-        Circles.createCircle(r, { xy: [20, 20], rad: 10 }),
-        Circles.createCircle(r, { xy: [60, 20], rad: 10 })
+        Circles.createCircle({ xy: [20, 20], rad: 10 }),
+        Circles.createCircle({ xy: [60, 20], rad: 10 })
     ];
     var connector = Connectors.join(circles);
+    equal(40, connector.distance, "The distance was properly calculated to 40");
 });
 
 module("Math Tests", {});
@@ -99,6 +101,23 @@ test("Dot Circle Placement", function(){
     testInSimpleCircleCoords(4, 18.1, false);
     testInSimpleCircleCoords(4, 2, true);
     testInSimpleCircleCoords(4, 1.9, false);
+});
+
+test("Costs", function(){
+    var c = Circles.createCircle({ xy: [20, 20], rad: 10, draw: false });
+    equal(123, Costs.circleCost(c), "Circle cost starts out as 123");
+    equal(undefined, Costs.gridCost(c), "Because circle is alone, grid cost is undefined.");
+
+    var cpair = [
+        Circles.createCircle({ xy: [20, 20], rad: 10, draw: false }),
+        Circles.createCircle({ xy: [50, 20], rad: 10, draw: false })
+    ];
+    var connector = Connectors.join(cpair);
+    equal(30, connector.distance, "The distance was properly calculated");
+    ok(cpair[0].isGrid(), "Connected circles are listed as a grid");
+    ok(cpair[1].isGrid(), "Connected circles are listed as a grid");
+    equal(undefined, Costs.circleCost(cpair[0]));
+    equal(123, Costs.gridCost(cpair[0]));
 });
 
 module("Modes", {});

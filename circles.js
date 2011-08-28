@@ -21,6 +21,7 @@ var Connectors = (function(){
     function Connector(id, circles, style){
         this.id = id;
         this.circles = circles;
+        _.invoke(this.circles, '_addConnector', this)
         this.style = style;
     }
     Connector.prototype.styleData = function(str) {
@@ -29,14 +30,21 @@ var Connectors = (function(){
         if (str !== undefined) { this.style = str; }
         return ConnectorStyles[this.style] || ConnectorStyles.normal;
     }
+    function getDistanceBetweenCoords(coords) {
+        var xDiff = Math.abs(coords[0][0] - coords[1][0]);
+        var yDiff = Math.abs(coords[0][1] - coords[1][1]);
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    }
     Connector.prototype._createPath = function(){
         if(this.circles.length == 2) {
             var coords = _.map(this.circles, function(circle, i){
-                return circle.xy.join(',');
+                return circle.xy;
             });
+            this.distance = getDistanceBetweenCoords(coords);
+            var coordStr = _.invoke(coords, 'join', ',');
             var style = this.styleData();
             this.path = R()
-                .path("M" + coords.join("L"))
+                .path("M" + coordStr.join("L"))
                 .attr(style);
         } else {
             warn("Can't connect this number of circles");
@@ -54,31 +62,73 @@ var Connectors = (function(){
         var c = new Connector(cjId, carr);
         connectors[cjId] = c;
         c.draw();
+        return c;
     }
     return {
         join: join
     }
 })();
 
+var Costs = (function(){
+    var unit = '¢';
+    function circleCost(c) {
+        if(c.isGrid()) {
+            return undefined;
+        } else {
+            return 123;
+        }
+    }
+    function gridCost(c){
+        if(!c.isGrid()) {
+            return undefined;
+        } else {
+            return 123;
+        }
+    }
+    return {
+        unit: unit,
+        circleCost: circleCost,
+        gridCost: gridCost
+    }
+})();
+
 var Circles = (function(){
     var circles = [],
-        cidCount = 0;
+        cidCount = 0,
+        r, rd;
     
     var circleDefaults = {
         rad: 10,
         style: 'normal',
         stroke: '#0f0',
-        fill: 'rgba(0,255,0,0.2)'
+        fill: 'rgba(0,255,0,0.2)',
+        draw: true,
+        drag: true
     };
-    function Circle(r, _o) {
+    
+    function init(o) {
+        r = o.r;
+        rd = o.rd;
+    }
+    
+    function Circle(_o) {
         var o = $.extend({}, circleDefaults, _o);
         this.xy = o.xy;
         this.rad = o.rad;
+        this._draw = o.draw;
+        this._drag = o.drag;
         this.style = o.style;
         this.fill = o.fill;
         this.stroke = o.stroke;
         this._id = '_c' + ++cidCount;
+        this.connectors = {};
     }
+    Circle.prototype._addConnector = function(c) {
+        this.connectors[c.id] = c;
+    };
+    Circle.prototype.isGrid = function(){
+        return _.keys(this.connectors).length > 0;
+    };
     Circle.prototype.styleData = function(str) {
         // if styleData receives a parameter, it sets the
         // style string before returning the style data.
@@ -106,6 +156,38 @@ var Circles = (function(){
             .circle(this.xy[0], this.xy[1], this.rad)
             .attr(style);
     }
+    Circle.prototype.listenDrag = function() {
+        function dragMove(dx, dy){
+            this.attr({
+                cx: this.ox + dx,
+                cy: this.oy + dy
+            });
+        }
+        function dragStart(){
+            this.cds = this.npO.containedDots();
+            this.ox = this.attr('cx');
+            this.oy = this.attr('cy');
+        }
+        function dragEnd(){
+            this.npO.xy = [this.attr('cx'), this.attr('cy')];
+            (function switchDots(circle){
+                var dotsInC2 = Dots.inCircle(circle);
+                _.each(Dots.list(), function(dot, i){
+                    if(_.include(dotsInC2, dot)) {
+                        dot.style = "covered";
+                    } else {
+                        dot.style = "normal";
+                    }
+                    dot.update();
+                });
+            })(this.npO);
+            log("End", this.npO);
+        }
+        if(this.rc !== undefined) {
+            this.rc.npO = this;
+            this.rc.drag(dragMove, dragStart, dragEnd);
+        }
+    }
     Circle.prototype.containedDots = function() {
         return Dots.inCircle(this);
     }
@@ -124,9 +206,10 @@ var Circles = (function(){
         return included;
     }
 
-    function createCircle(r, opts) {
-        var c = new Circle(r, opts);
-        c.draw();
+    function createCircle(opts) {
+        var c = new Circle(opts);
+        c._draw && c.draw();
+        c._draw && c._drag && c.listenDrag();
         circles.push(c);
         return c;
     }
@@ -141,6 +224,7 @@ var Circles = (function(){
     }
 
 	return {
+	    init: init,
 	    createCircle: createCircle,
 	    selectedCircles: selectedCircles,
 	    _inCircleCoords: _inCircleCoords,
