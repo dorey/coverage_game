@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>test</title>
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+		<link rel="stylesheet" href="/qunit.css" type="text/css" charset="utf-8">
+		<script type="text/javascript" charset="utf-8">
+			function log() {
+				if(console !== undefined && console.log !== undefined) { console.log.apply(console, arguments); }
+			}
+			function warn() {
+				if(console !== undefined && console.warn !== undefined) { console.warn.apply(console, arguments); throw(arguments[0]); }
+			}
+		</script>
+		<script src="/underscore.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/color.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/qunit.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../script/raphael-min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="circles.js" type="text/javascript" charset="utf-8"></script>
+		<script src="events.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" charset="utf-8">
+			var testScripts = "events circles".split(" ");
+		</script>
+</head>
+<body>
+	<div id="np"></div>
+	<h1 id="qunit-header">QUnit Testing of NMIS Map</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup</div>
+	<script type="text/javascript" charset="utf-8">
+	var rd = $('#np')
+		.width(600)
+		.height(200);
+	var r = Raphael(rd.get(0), rd.width(), rd.height());
+	</script>
+	<script type="text/javascript" charset="utf-8">
+		function loadNextTest(){
+			var s = testScripts.shift();
+			s !== undefined &&
+				$.getScript("tests/test_"+s+".js")
+					.done(loadNextTest);
+		}
+		loadNextTest();
+	</script>
+</body>
+</html>
