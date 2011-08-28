@@ -58,27 +58,16 @@ var Circles = (function(){
             .attr(style);
     }
     function _inCircleCoords(crx, cry, crad, dx, dy) {
-        var xHemisphere = dx > crx;
-        var yHemisphere = dy > cry;
         var included = false;
-        // not sure the best way to do this mathematically
-        //  ...i'm sure there's a cleaner way, but to get
-        //      tests passing, I'll handle quadrants individually
-        var xDist = dx - crx;
-        var radSquared = crad * crad;
-        var z1 = Math.sqrt(radSquared - xDist * xDist);
-        if (xHemisphere && !yHemisphere) {
-            var z2 = crx - z1;
-            included = dy >= z2;
-        } else if(xHemisphere && yHemisphere) {
-            var z2 = z1 + crx;
-            included = dy <= z2;
-        } else if(!xHemisphere && yHemisphere) {
-            var z2 = crx + z1;
-            included = dy <= z2;
-        } else if(!xHemisphere && !yHemisphere) {
-            var z2 = crx - z1;
-            included = dy >= z2;
+
+        var yHemisphere = dy > cry,
+            xDist = dx - crx,
+            yMaxDist = Math.sqrt((crad * crad) - (xDist * xDist)),
+            yTargetVal = crx + ((yHemisphere ? 1 : -1) * yMaxDist);
+        if(yHemisphere) {
+            included = dy <= yTargetVal;
+        } else {
+            included = dy >= yTargetVal;
         }
         return included;
     }
