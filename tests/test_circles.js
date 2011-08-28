@@ -67,12 +67,12 @@ test("Grid Points", function(){
 });
 
 test("Random Points", function(){
-    (function addRandomPoints(dotCount){
-        var l = [];
-        function randUnder(n) { return Math.floor(Math.random()*n); }
-        for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
-        Dots.makeDots.apply(this, l);
-    })(20);
+    var l = [];
+    function randUnder(n) { return Math.floor(Math.random()*n); }
+    _(20).times(function(){
+        l.push([ randUnder(600), randUnder(200) ]);
+    });
+    Dots.makeDots.apply(this, l);
 });
 
 test("Connect Circles", function(){

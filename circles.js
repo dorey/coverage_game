@@ -36,29 +36,33 @@ var Connectors = (function(){
         var yDiff = Math.abs(coords[0][1] - coords[1][1]);
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     }
-    Connector.prototype._calcDistance = function(){
-        var coords = _.map(this.circles, function(circle, i){
+    Connector.prototype.coordinates = function(){
+        return _.map(this.circles, function(circle, i){
             return circle.xy;
         });
+    }
+    Connector.prototype._calcDistance = function(){
+        var coords = this.coordinates();
         this.distance = getDistanceBetweenCoords(coords);
+    }
+    Connector.prototype.coordPath = function() {
+        var coords = this.coordinates();
         return 'M' + _.invoke(coords, 'join', ',').join('L');
     }
     Connector.prototype._createPath = function(){
-        var coordPath = this._calcDistance();
         var style = this.styleData();
         this.path = R()
-            .path(coordPath)
+            .path(this.coordPath())
             .attr(style);
     }
     Connector.prototype._updatePath = function(){
-        var coordPath = this._calcDistance();
+        this.coords = undefined;
+        this._calcDistance();
         this.path
-            .attr('path', coordPath);
+            .attr('path', this.coordPath());
     }
     Connector.prototype.draw = function(){
-        if(this.path === undefined) {
-            this._createPath();
-        }
+        this.path === undefined && this._createPath();
     }
 
     var connectors = {};
@@ -66,7 +70,10 @@ var Connectors = (function(){
         var cjId = _.pluck(carr, '_id').sort().join('-');
         var c = new Connector(cjId, carr);
         connectors[cjId] = c;
-        c.draw();
+        c._calcDistance();
+        // If all the circles are drawn, then draw the connector.
+        _.all(_.pluck(carr, '_draw'), _.identity) &&
+                c.draw();
         return c;
     }
     function clear() {
@@ -129,7 +136,7 @@ var Circles = (function(){
         this.style = o.style;
         this.fill = o.fill;
         this.stroke = o.stroke;
-        this._id = '_c' + ++cidCount;
+        this._id = _.uniqueId('circle');
         this.connected = false;
         this.connectors = {};
     }
