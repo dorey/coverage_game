@@ -19,6 +19,34 @@
 	<script src="libs/color.js" type="text/javascript" charset="utf-8"></script>
 	<script src="libs/jquery-1.6.2-min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="libs/raphael-min.js" type="text/javascript" charset="utf-8"></script>
-	<script src="src/application.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" charset="utf-8">
+		var main = $('div#main').eq(0);
+		window.r = Raphael(main.get(0), main.width(), main.height());
+		
+		var createFixedCircle = _.once(function(xy){
+		    var c = Circles.createCircle({
+		        xy: xy,
+		        rad: 50
+		    });
+		});
+		
+		function createDot(xy){
+			Dots.makeDots(xy);
+		}
+
+		main.click(function(evt){
+			createDot([evt.offsetX, evt.offsetY]);
+		});
+		$('<a>')
+			.attr('href', '#')
+			.text('Export Dot List')
+			.click(function(){
+				main.empty();
+				$('<textarea>')
+					.text(JSON.stringify(_.pluck(Dots.list(), 'xy')))
+					.appendTo(main);
+			})
+			.appendTo('header');
+	</script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+}
+header {
+    padding: 5px 12px;
+    background-color: #444;
+    color: #fff;
+}
+div#main {
+    padding: 0;
+    background-color: #ccc;
+    position: relative;
+}

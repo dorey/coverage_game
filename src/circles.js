@@ -1,3 +1,10 @@
+function log() {
+	if(console !== undefined && console.log !== undefined) { console.log.apply(console, arguments); }
+}
+function warn() {
+	if(console !== undefined && console.warn !== undefined) { console.warn.apply(console, arguments); throw(arguments[0]); }
+}
+
 function R(){ return r; } //because i need to find a better way to pass the raphael object to the modules
 
 var CircleStyles = {
@@ -108,6 +115,52 @@ var Costs = (function(){
     }
 })();
 
+var StatBoxDisplaySettings = {
+    leftPadding: 10
+};
+
+var StatBox = (function(){
+    var active = true;
+    var statRect;
+    function _createStatRect(){
+        statRect = $('<div />')
+            .addClass('stat-box')
+            .css({
+                'position': 'absolute'
+            })
+            .appendTo(R().canvas.parentElement);
+    }
+    function showForCircle(c, showingDots, totalDots){
+        statRect === undefined && _createStatRect();
+        var sdl = showingDots.length,
+            totl = totalDots.length,
+            rate = Math.floor(1000 * sdl / totl) / 10,
+            rateStr = "" + rate + "%";
+        var t = _.template("<p class='count'><%= showingCount %></p><p class='outof'><%= totalCount %></p><p class='percent'><%= rate %></p>")({
+            showingCount: sdl,
+            rate: rateStr,
+            totalCount: totl
+        });
+        statRect
+            .html(t)
+            .css({
+                left: c.xy[0] + c.rad + StatBoxDisplaySettings.leftPadding,
+                top: c.xy[1] - c.rad
+            })
+            .show();
+    }
+    function fadeBox(delay){
+        _.delay(function(){
+            statRect.fadeOut();
+        }, delay);
+    }
+    return {
+        showForCircle: showForCircle,
+        fadeBox: fadeBox,
+        active: active
+    }
+})();
+
 var Circles = (function(){
     var circles = [],
         cidCount = 0,
@@ -175,6 +228,18 @@ var Circles = (function(){
             .attr(style);
     }
     Circle.prototype.listenDrag = function() {
+        var calcDotsForCircle = _.throttle(function switchDots(circle){
+            var dotsInC2 = Dots.inCircle(circle);
+            _.each(Dots.list(), function(dot, i){
+                if(_.include(dotsInC2, dot)) {
+                    dot.style = "covered";
+                } else {
+                    dot.style = "normal";
+                }
+                dot.update();
+            });
+            StatBox.active && StatBox.showForCircle(circle, dotsInC2, Dots.list());
+        }, 25);
         function dragMove(dx, dy){
             var newX = this.ox + dx,
                 newY = this.oy + dy;
@@ -184,17 +249,7 @@ var Circles = (function(){
             });
             this.npO.xy = [newX, newY];
             this.npO.connected && _.invoke(this.npO.connectors, '_updatePath');
-            (function switchDots(circle){
-                var dotsInC2 = Dots.inCircle(circle);
-                _.each(Dots.list(), function(dot, i){
-                    if(_.include(dotsInC2, dot)) {
-                        dot.style = "covered";
-                    } else {
-                        dot.style = "normal";
-                    }
-                    dot.update();
-                });
-            })(this.npO);
+            calcDotsForCircle(this.npO);
         }
         function dragStart(){
             this.cds = this.npO.containedDots();
@@ -203,6 +258,7 @@ var Circles = (function(){
         }
         function dragEnd(){
             this.npO.xy = [this.attr('cx'), this.attr('cy')];
+            StatBox.active && StatBox.fadeBox(500);
         }
         if(this.rc !== undefined) {
             this.rc.npO = this;
