@@ -26,22 +26,21 @@ test("Circles", function(){
     });
 
     function testInSimpleCircleCoords(dx, dy, shouldBe) {
-        equals(Circles._inCircleCoords(11, 11, 10, dx, dy), shouldBe,
+        equals(Circles._inCircleCoords(10, 10, 10, dx, dy), shouldBe,
             "Point ["+dx+", "+dy+"] should " +
                 (shouldBe === false ? "NOT " : "") +
-                "be in the circle [11, 11, 10]");
+                "be in the circle [10, 10, 10]");
     }
-    testInSimpleCircleCoords(17, 3, true);
-    testInSimpleCircleCoords(17, 2.9, false);
-
-    testInSimpleCircleCoords(17, 19, true);
-    testInSimpleCircleCoords(17, 19.1, false);
-
-    testInSimpleCircleCoords(5, 19, true);
-    testInSimpleCircleCoords(5, 19.1, false);
-
-    testInSimpleCircleCoords(5, 3, true);
-    testInSimpleCircleCoords(5, 2.9, false);
+    // the should-be-true values are on the border of the simple circle.
+    // the should-be-false values are outside of the circle.
+    testInSimpleCircleCoords(16, 2, true);
+    testInSimpleCircleCoords(16, 1.9, false);
+    testInSimpleCircleCoords(16, 18, true);
+    testInSimpleCircleCoords(16, 18.1, false);
+    testInSimpleCircleCoords(4, 18, true);
+    testInSimpleCircleCoords(4, 18.1, false);
+    testInSimpleCircleCoords(4, 2, true);
+    testInSimpleCircleCoords(4, 1.9, false);
 
     ok(c !== undefined, "new circle is not undefined");
     equal(Circles.list().length, 1, "Circles.list() returns one circle.");
@@ -56,7 +55,7 @@ test("Circles", function(){
     
     var l = [];
     function randUnder(n) { return Math.floor(Math.random()*n); }
-    var dotCount = 0;
+    var dotCount = 20;
     for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
 
     Dots.makeDots.apply(this, l);
