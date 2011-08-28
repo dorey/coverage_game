@@ -26,10 +26,13 @@ test("Circles", function(){
     });
 
     function testInSimpleCircleCoords(dx, dy, shouldBe) {
-        equals(Circles._inCircleCoords(10, 10, 10, dx, dy), shouldBe,
-            "Point ["+dx+", "+dy+"] should " +
+        var ox = 2,
+            oy = 1;
+        var cc = [10 + ox, 10 + oy];
+        equals(shouldBe, Circles._inCircleCoords(10 + ox, 10 + oy, 10, dx + ox, dy + oy),
+            "Point ["+ (dx + ox) +", "+ (dy + oy) +"] should " +
                 (shouldBe === false ? "NOT " : "") +
-                "be in the circle [10, 10, 10]");
+                "be in the circle [" + cc[0] + ", " + cc[1] + ", 10]");
     }
     // the should-be-true values are on the border of the simple circle.
     // the should-be-false values are outside of the circle.
@@ -55,7 +58,7 @@ test("Circles", function(){
     
     var l = [];
     function randUnder(n) { return Math.floor(Math.random()*n); }
-    var dotCount = 20;
+    var dotCount = 0;
     for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
 
     Dots.makeDots.apply(this, l);
