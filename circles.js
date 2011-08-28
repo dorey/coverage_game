@@ -12,7 +12,8 @@ var CircleStyles = {
 };
 
 var Circles = (function(){
-    var circles = [];
+    var circles = [],
+        cidCount = 0;
     
     var circleDefaults = {
         rad: 10,
@@ -27,6 +28,7 @@ var Circles = (function(){
         this.style = o.style;
         this.fill = o.fill;
         this.stroke = o.stroke;
+        this._id = '_c' + ++cidCount;
     }
     Circle.prototype.styleData = function(str) {
         // if styleData receives a parameter, it sets the 
@@ -55,6 +57,31 @@ var Circles = (function(){
             .circle(this.xy[0], this.xy[1], this.rad)
             .attr(style);
     }
+    function _inCircleCoords(crx, cry, crad, dx, dy) {
+        var xHemisphere = dx > crx;
+        var yHemisphere = dy > cry;
+        var included = false;
+        // not sure the best way to do this mathematically
+        //  ...i'm sure there's a cleaner way, but to get
+        //      tests passing, I'll handle quadrants individually
+        var xDist = dx - crx;
+        var radSquared = crad * crad;
+        var z1 = Math.sqrt(radSquared - xDist * xDist);
+        if (xHemisphere && !yHemisphere) {
+            var z2 = crx - z1;
+            included = dy >= z2;
+        } else if(xHemisphere && yHemisphere) {
+            var z2 = z1 + crx;
+            included = dy <= z2;
+        } else if(!xHemisphere && yHemisphere) {
+            var z2 = crx + z1;
+            included = dy <= z2;
+        } else if(!xHemisphere && !yHemisphere) {
+            var z2 = crx - z1;
+            included = dy >= z2;
+        }
+        return included;
+    }
 
     function createCircle(r, opts) {
         var c = new Circle(r, opts);
@@ -72,6 +99,7 @@ var Circles = (function(){
 	return {
 	    createCircle: createCircle,
 	    selectedCircles: selectedCircles,
+	    _inCircleCoords: _inCircleCoords,
 	    list: function(){
 	        return circles;
 	    }
@@ -134,15 +162,6 @@ var Dots = (function(){
         _.invoke(DotList, 'draw');
 //        $(DotList).each(function(i,d){d.draw()});
     }
-    function inCircleCoords(crx, cry, crad, dx, dy) {
-        var xmax = crx + crad,
-            xmin = crx - crad,
-            ymax = cry + crad,
-            ymin = cry - crad;
-        R()
-            .rect(xmin, ymin, crad * 2, crad * 2);
-        return dx <= xmax && dx >= xmin && dy <= ymax && dy >= ymin;
-    }
     function inCircle(c) {
         var x = c.xy[0],
             y = c.xy[1],
@@ -155,7 +174,7 @@ var Dots = (function(){
         $(DotList).each(function(i, dot){
             var dx = dot.xy[0],
                 dy = dot.xy[1];
-            if (inCircleCoords(x, y, rad, dx, dy)) {
+            if (Circles._inCircleCoords(x, y, rad, dx, dy)) {
                 containedDots.push(dot);
             }
         });

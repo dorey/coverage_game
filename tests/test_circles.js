@@ -25,11 +25,29 @@ test("Circles", function(){
         rad: 12
     });
 
+    function testInSimpleCircleCoords(dx, dy, shouldBe) {
+        equals(Circles._inCircleCoords(11, 11, 10, dx, dy), shouldBe,
+            "Point ["+dx+", "+dy+"] should " +
+                (shouldBe === false ? "NOT " : "") +
+                "be in the circle [11, 11, 10]");
+    }
+    testInSimpleCircleCoords(17, 3, true);
+    testInSimpleCircleCoords(17, 2.9, false);
+
+    testInSimpleCircleCoords(17, 19, true);
+    testInSimpleCircleCoords(17, 19.1, false);
+
+    testInSimpleCircleCoords(5, 19, true);
+    testInSimpleCircleCoords(5, 19.1, false);
+
+    testInSimpleCircleCoords(5, 3, true);
+    testInSimpleCircleCoords(5, 2.9, false);
+
     ok(c !== undefined, "new circle is not undefined");
     equal(Circles.list().length, 1, "Circles.list() returns one circle.");
     equal(Circles.selectedCircles().length, 0, "No circle is marked as selected yet.");
     c.select();
-    equal(Circles.selectedCircles().get(0), c, "The circle is selected.");
+    equal(Circles.selectedCircles().get(0)._id, c._id, "The circle is selected.");
 
     var c2 = Circles.createCircle(r, {
         xy: [300, 100],
@@ -38,7 +56,8 @@ test("Circles", function(){
     
     var l = [];
     function randUnder(n) { return Math.floor(Math.random()*n); }
-    for(var i=0; i<20; i++) { l.push([ randUnder(600), randUnder(200) ]); }
+    var dotCount = 0;
+    for(var i=0; i<dotCount; i++) { l.push([ randUnder(600), randUnder(200) ]); }
 
     Dots.makeDots.apply(this, l);
 
