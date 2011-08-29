@@ -79,8 +79,8 @@ var Connectors = (function(){
         connectors[cjId] = c;
         c._calcDistance();
         // If all the circles are drawn, then draw the connector.
-        _.all(_.pluck(carr, '_draw'), _.identity) &&
-                c.draw();
+        _(carr).chain().pluck('_draw').all(_.identity)
+            .value() && c.draw();
         return c;
     }
     function clear() {
@@ -120,15 +120,16 @@ var StatBoxDisplaySettings = {
 };
 
 var StatBox = (function(){
-    var active = true;
+    var active = false;
     var statRect;
     function _createStatRect(){
+        var parentNode = $(R().canvas).parents().eq(0);
         statRect = $('<div />')
             .addClass('stat-box')
             .css({
                 'position': 'absolute'
             })
-            .appendTo(R().canvas.parentElement);
+            .appendTo(parentNode);
     }
     function showForCircle(c, showingDots, totalDots){
         statRect === undefined && _createStatRect();
@@ -228,7 +229,7 @@ var Circles = (function(){
             .attr(style);
     }
     Circle.prototype.listenDrag = function() {
-        var calcDotsForCircle = _.throttle(function switchDots(circle){
+        var calcDotsForCircle = /*_.throttle(*/function switchDots(circle){
             var dotsInC2 = Dots.inCircle(circle);
             _.each(Dots.list(), function(dot, i){
                 if(_.include(dotsInC2, dot)) {
@@ -239,7 +240,7 @@ var Circles = (function(){
                 dot.update();
             });
             StatBox.active && StatBox.showForCircle(circle, dotsInC2, Dots.list());
-        }, 25);
+        } //, 25);
         function dragMove(dx, dy){
             var newX = this.ox + dx,
                 newY = this.oy + dy;

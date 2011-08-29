@@ -1,4 +1,6 @@
-var main = $('div#main').eq(0);
+var main = $('div#main').eq(0)
+        .width(320)
+    	.height(140);
 $(window).resize(_.throttle(function(){
     var avail = $(window).height(),
         hh = $('header').height(),
@@ -20,6 +22,8 @@ $.ajax({
     Dots.makeDots.apply(this, level1dots);
 });
 
+StatBox.active = true;
+
 var createFixedCircle = _.once(function(xy){
     var c = Circles.createCircle({
         xy: xy,
@@ -29,5 +33,8 @@ var createFixedCircle = _.once(function(xy){
 });
 
 main.click(function(evt){
-    createFixedCircle([evt.offsetX, evt.offsetY]);
+    createFixedCircle([
+        evt.offsetX || evt.layerX,
+        evt.offsetY || evt.layerY
+        ]);
 });

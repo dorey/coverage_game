@@ -13,3 +13,6 @@ div#main {
     background-color: #ccc;
     position: relative;
 }
+* { /* for iphones, mainly */
+   -webkit-user-select: none;
+}
