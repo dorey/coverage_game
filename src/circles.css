@@ -29,3 +29,28 @@ div#main {
 * { /* for iphones, mainly */
    -webkit-user-select: none;
 }
+.stat-box {
+    background-color: rgba(255,255,255,0.2);
+    width: 55px;
+}
+.stat-box p {
+    border: 1px solid #aaa;
+    color: #333;
+    font-size: 10px;
+    margin: 2px 0;
+    padding: 2px 4px;
+}
+.stat-box p span.fw-number {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+}
+.stat-box p.count {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: center;
+}
+.stat-box p span.fw-number.pct {
+    display: inline;
+    width: 40px;
+}

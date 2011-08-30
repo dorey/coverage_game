@@ -7,21 +7,21 @@ function warn() {
 
 function R(){ return r; } //because i need to find a better way to pass the raphael object to the modules
 
+function circleStyle(chex) {
+    var cs = {},
+        c = Color(chex);
+    cs.fill = c.clearer(0.75).rgbaString();
+    cs.stroke = c.opaquer(0.5).rgbaString();
+    return { raphAttr: cs };
+}
+
 var CircleStyles = {
-    normal: {
-        stroke: '#00ff00',
-        fill: 'rgba(0,255,0,0.2)'
-    },
-    selected: {
-        stroke: '#f00',
-        fill: 'rgba(255,0,0,0.2)'
-    }
+    normal: circleStyle("#1982a8"),
+    selected: circleStyle("#125770")
 };
 
 var ConnectorStyles = {
-    normal: {
-        stroke: '#f00'
-    }
+    normal: circleStyle("#f00")
 };
 
 var Connectors = (function(){
@@ -60,7 +60,7 @@ var Connectors = (function(){
         var style = this.styleData();
         this.path = R()
             .path(this.coordPath())
-            .attr(style);
+            .attr(style.raphAttr);
     }
     Connector.prototype._updatePath = function(){
         this.coords = undefined;
@@ -131,22 +131,37 @@ var StatBox = (function(){
             })
             .appendTo(parentNode);
     }
+    function recalcGridCoords(c, statRect){
+        var bros = c.connectedCircles();
+        bros.push(c);
+        var coordVals = _.invoke(bros, 'attributes');
+        var extremes = {
+            maxX: Math.max.apply(Math, _.pluck(coordVals, 'xM')),
+            maxY: Math.max.apply(Math, _.pluck(coordVals, 'yM')),
+            minX: Math.min.apply(Math, _.pluck(coordVals, 'xm')),
+            minY: Math.min.apply(Math, _.pluck(coordVals, 'ym'))
+        };
+        statRect.css({
+            left: extremes.maxX + StatBoxDisplaySettings.leftPadding,
+            top: extremes.minY
+        })
+    };
+    var debounceRecalcGridCoords = _.debounce(recalcGridCoords, 50);
     function showForGrid(c, showingDots, totalDots) {
         statRect === undefined && _createStatRect();
         var sdl = showingDots.length,
             totl = totalDots.length,
             rate = Math.floor(1000 * sdl / totl) / 10,
-            rateStr = "" + rate + "%";
-        var t = _.template("<p class='count'><%= showingCount %></p><p class='outof'><%= totalCount %></p><p class='percent'><%= rate %></p>")({
+            rateStr = "" + rate;
+        var t = _.template("<p class='count'><span class='fw-number num'><%= showingCount %></span></p><p><span class='fw-number denom'><%= totalCount %></span> | <span class='fw-number pct'><%= rate %></span>%</p>")({
             showingCount: sdl,
             rate: rateStr,
             totalCount: totl
         });
+        recalcGridCoords(c, statRect);
         statRect
             .html(t)
             .css({
-                left: c.xy[0] + c.rad + StatBoxDisplaySettings.leftPadding,
-                top: c.xy[1] - c.rad
             })
             .show();
     }
@@ -155,8 +170,8 @@ var StatBox = (function(){
         var sdl = showingDots.length,
             totl = totalDots.length,
             rate = Math.floor(1000 * sdl / totl) / 10,
-            rateStr = "" + rate + "%";
-        var t = _.template("<p class='count'><%= showingCount %></p><p class='outof'><%= totalCount %></p><p class='percent'><%= rate %></p>")({
+            rateStr = "" + rate + "";
+        var t = _.template("<p class='count'><span class='fw-number num'><%= showingCount %></span></p><p><span class='fw-number denom'><%= totalCount %></span> | <span class='fw-number pct'><%= rate %></span>%</p>")({
             showingCount: sdl,
             rate: rateStr,
             totalCount: totl
@@ -214,9 +229,26 @@ var Circles = (function(){
         this.connected = false;
         this.connectors = {};
     }
+    Circle.prototype.attributes = function(c) {
+        return {
+            // x: this.xy[0],
+            // y: this.xy[1],
+            xm: this.xy[0] - this.rad,
+            ym: this.xy[1] - this.rad,
+            xM: this.xy[0] + this.rad,
+            yM: this.xy[1] + this.rad,
+            radius: this.rad,
+            _id: this._id
+        };
+    }
     Circle.prototype._addConnector = function(c) {
         this.connected = true;
         this.connectors[c.id] = c;
+    };
+    Circle.prototype.connectedCircles = function(all) {
+        var chain = _(this.connectors).chain()
+                .pluck('circles').flatten().unique();
+        return !all ? chain.without(this).value() : chain.value();
     };
     Circle.prototype.isGrid = function(){
         return _.keys(this.connectors).length > 0;
@@ -227,41 +259,55 @@ var Circles = (function(){
         if (str !== undefined) { this.style = str; }
         return CircleStyles[this.style] || CircleStyles.normal;
     }
-    Circle.prototype.select = function(){
+    Circle.prototype.select = function(opts){
+        if(opts===undefined) {opts = {};}
+        !!opts.unique && _.invoke(selectedCircles(), 'unselect')
         var style = this.styleData('selected');
         this.rc
-            .attr(style);
-            // .attr('stroke', '#f00')
-            // .attr('fill', 'rgba(255,0,0,0.2)');
+            .attr(style.raphAttr);
         this.selected = true;
     }
     Circle.prototype.unselect = function(){
+        var style = this.styleData('normal');
         this.rc
-            .attr('stroke', '#f00')
-            .attr('fill', 'rgba(255,0,0,0.2)');
-        this.selected = true;
+            .attr(style.raphAttr);
+        this.selected = false;
     }
     Circle.prototype.draw = function(){
         var hr = this.rad / 2;
         var style = this.styleData();
         this.rc = R()
             .circle(this.xy[0], this.xy[1], this.rad)
-            .attr(style);
+            .attr(style.raphAttr);
+        calcDotsForCircle(this);
+        this.select({unique:true});
     }
+    Circle.prototype.changeXY = function(xDelta, yDelta) {
+        this.xy = [
+            this.xy[0] + xDelta,
+            this.xy[1] + yDelta
+            ];
+        this.rc.attr({
+            cx: this.xy[0],
+            cy: this.xy[1]
+        });
+        this.connected && _.invoke(this.connectors, '_updatePath');
+        calcDotsForCircle(this);
+    }
+    var calcDotsForCircle = _.throttle(function switchDots(circle){
+        var dotsInC2 = Dots.inGrid(circle);
+        _.each(Dots.list(), function(dot, i){
+            if(_.include(dotsInC2, dot)) {
+                dot.style = "covered";
+            } else {
+                dot.style = "normal";
+            }
+            dot.update();
+        });
+        StatBox.active && !circle.connected && StatBox.showForCircle(circle, dotsInC2, Dots.list());
+        StatBox.active && circle.connected && StatBox.showForGrid(circle, dotsInC2, Dots.list());
+    }, 25);
     Circle.prototype.listenDrag = function() {
-        var calcDotsForCircle = /*_.throttle(*/function switchDots(circle){
-            var dotsInC2 = Dots.inCircle(circle);
-            _.each(Dots.list(), function(dot, i){
-                if(_.include(dotsInC2, dot)) {
-                    dot.style = "covered";
-                } else {
-                    dot.style = "normal";
-                }
-                dot.update();
-            });
-            StatBox.active && !circle.connected && StatBox.showForCircle(circle, dotsInC2, Dots.list());
-            StatBox.active && circle.connected && StatBox.showForGrid(circle, dotsInC2, Dots.list());
-        } //, 25);
         function dragMove(dx, dy){
             var newX = this.ox + dx,
                 newY = this.oy + dy;
@@ -273,14 +319,15 @@ var Circles = (function(){
             this.npO.connected && _.invoke(this.npO.connectors, '_updatePath');
             calcDotsForCircle(this.npO);
         }
-        function dragStart(){
+        function dragStart(x, y, evt){
+            this.npO.select({unique: true, action:'dragging', evt: evt});
             this.cds = this.npO.containedDots();
             this.ox = this.attr('cx');
             this.oy = this.attr('cy');
         }
         function dragEnd(){
             this.npO.xy = [this.attr('cx'), this.attr('cy')];
-            StatBox.active && StatBox.fadeBox(500);
+            StatBox.active && StatBox.fadeBox(15000);
         }
         if(this.rc !== undefined) {
             this.rc.npO = this;
@@ -335,14 +382,8 @@ var Circles = (function(){
 })();
 
 var DotStyles = {
-    normal: {
-        stroke: '#e9d5f4',
-        fill: '#f1eaf9'
-    },
-    covered: {
-        stroke: "#8f2fc6",
-        fill: "#b796e0"
-    }
+    normal: circleStyle('#e9d5f4'),
+    covered: circleStyle('#8f2fc6')
 };
 
 var Dots = (function(){
@@ -370,14 +411,14 @@ var Dots = (function(){
         var hr = 1;
         this.d = R()
             .circle(this.xy[0], this.xy[1], hr * 2)
-            .attr(style);
+            .attr(style.raphAttr);
     }
     Dot.prototype.draw = function(){
         if (this.d === undefined) {
             this._createRaphaelDot();
         } else {
             var style = this.styleData();
-            this.d.attr(style);
+            this.d.attr(style.raphAttr);
         }
     }
     Dot.prototype.update = Dot.prototype.draw;
@@ -403,6 +444,15 @@ var Dots = (function(){
         });
         return containedDots;
     }
+    function inGrid(c) {
+        if(!c.connected) { return inCircle(c); }
+        // get cached values for other circles, if they exist
+        return _(c.connectedCircles(true)).chain()
+                .map(Dots.inCircle)
+                .flatten()
+                .uniq()
+                .value();
+    }
     function clear() {
         DotList = [];
     }
@@ -412,18 +462,23 @@ var Dots = (function(){
     return {
         makeDots: makeDots,
         inCircle: inCircle,
+        inGrid: inGrid,
         list: list,
         clear: clear
     }
 })();
 
 var Events = (function(){
-    function listenForUpDownArrows(cb){
+    function listenForArrows(cb){
         typeof cb === "function" && $('body').bind('keydown.updown', function(evt){
             if(evt.keyCode === 38) {
                 cb.call(window, "up", evt)
             } else if(evt.keyCode === 40) {
                 cb.call(window, "down", evt)
+            } else if(evt.keyCode === 37){
+                cb.call(window, "left", evt)
+            } else if(evt.keyCode === 39){
+                cb.call(window, "right", evt)
             }
         });
     }
@@ -433,7 +488,7 @@ var Events = (function(){
     }
 
     return {
-        listenForUpDownArrows: listenForUpDownArrows,
+        listenForArrows: listenForArrows,
         clear: clear
     }
 })();
@@ -443,7 +498,6 @@ var Nav = (function(){
         bs = [];
 
     function getNav(){
-        log("get nav");
         var d = rdiv.find('.navigation');
         if(d.length===0) {
             d = $('<p />', {'class':'navigation'}).appendTo(rdiv);

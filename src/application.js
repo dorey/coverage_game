@@ -26,8 +26,8 @@ $.ajax({
 });
 
 Nav.init('header');
-Nav.addButton("Mode 1", "window.location.search='mode=1'");
-Nav.addButton("Mode 2", "window.location.search='mode=2'");
+Nav.addButton("1: Single", "window.location.search='mode=1'");
+Nav.addButton("2: Grid", "window.location.search='mode=2'");
 Nav.draw();
 
 var wSearchObj = (function(wls){
@@ -40,19 +40,20 @@ var wSearchObj = (function(wls){
 
 var wmode = wSearchObj.mode || "1";
 
+StatBox.active = true;
+
 if(wmode === "1") {
     var level1dots = levelData[0].dots;
     Dots.makeDots.apply(this, level1dots);
     
-    StatBox.active = true;
     var createFixedCircle = _.once(function(xy){
         var c = Circles.createCircle({
             xy: xy,
             rad: 25,
-            statBox: true
+            fixedRadius: true,
+            style: 'c1'
         });
     });
-    log(main);
     main.click(function(evt){
         createFixedCircle([
             evt.offsetX || evt.layerX,
@@ -60,32 +61,56 @@ if(wmode === "1") {
             ]);
     });
 } else if(wmode === "2") {
-    var level2dots = levelData[0].dots;
-    Dots.makeDots.apply(this, level2dots);
-    StatBox.active = true;
-    var clickCount = 0;
-    var cs = [];
-    function createNode(xy){
-        clickCount++;
-        if(clickCount === 1) {
-            cs[0] = Circles.createCircle({
-                xy: xy,
-                rad: 25,
-                statBox: true
-            });
-        } else if(clickCount === 2) {
-            cs[1] = Circles.createCircle({
-                xy: xy,
-                rad: 25,
-                statBox: true
-            });
-            Connectors.join(cs);
+    (function(){
+        var level2dots = levelData[0].dots;
+        Dots.makeDots.apply(this, level2dots);
+        StatBox.active = true;
+        var clickCount = 0;
+        var cs = [];
+        function createNode(xy){
+            clickCount++;
+            if(clickCount === 1) {
+                cs[0] = Circles.createCircle({
+                    xy: xy,
+                    rad: 20,
+                    fixedRadius: true,
+                    style: 'c2'
+                });
+            } else if(clickCount === 2) {
+                cs[1] = Circles.createCircle({
+                    xy: xy,
+                    rad: 20,
+                    statBox: true,
+                    fixedRadius: true,
+                    style: 'c2'
+                });
+                Connectors.join(cs);
+            }
         }
-    };
-    main.click(function(evt){
-        createNode([
-            evt.offsetX || evt.layerX,
-            evt.offsetY || evt.layerY
-            ]);
-    });
+        main.click(function(evt){
+            createNode([
+                evt.offsetX || evt.layerX,
+                evt.offsetY || evt.layerY
+                ]);
+        });
+    })();
 }
+
+Events.listenForArrows(function(direction, evt){
+    var circ = Circles.selectedCircles().get(0);
+    if(circ==undefined) {
+        return;
+    } else if(evt.altKey) {
+        return log("Alt key pressed");
+    }
+    var x=0, y=0;
+    direction === "up" && y--;
+    direction === "down" && y++;
+    direction === "left" && x--;
+    direction === "right" && x++;
+    evt.shiftKey && (function shiftMultiply(mult){
+        x = x * mult;
+        y = y * mult;
+    })(10);
+    Circles.selectedCircles().get(0).changeXY(x, y);
+});

@@ -15,7 +15,7 @@ module("Raphael Test", {
     setup: function(){
         _.invoke([Nav, R(), Circles, Dots, Connectors, Events],
             'clear');
-        Events.listenForUpDownArrows(function(key, evt){
+        Events.listenForArrows(function(key, evt){
             key === "up" && log("Up Key");
             key === "down" && log("Down Key");
             evt.preventDefault();
@@ -23,7 +23,9 @@ module("Raphael Test", {
         Circles.init({ r: r, rd: rd });
         createNav();
     },
-    teardown: function(){}
+    teardown: function(){
+        Events.clear();
+    }
 });
 
 test("Circles", function(){
@@ -82,6 +84,12 @@ test("Connect Circles", function(){
     ];
     var connector = Connectors.join(circles);
     equal(40, connector.distance, "The distance was properly calculated to 40");
+    equal(0, Dots.list().length, "Zero dots exist at the moment");
+    Dots.makeDots([20, 13], [60, 27]);
+    equal(2, Dots.list().length, "Two dots exist at the moment");
+    equal(1, Dots.inCircle(circles[0]).length, "This circle overlaps with one dot.");
+    equal(1, circles[0].connectedCircles().length, "Circle.connectedCircles() returns one sibling.");
+    equal(2, Dots.inGrid(circles[0]).length, "This grid overlaps with two dots.");
 });
 
 module("Math Tests", {});
