@@ -14,6 +14,14 @@ function circleStyle(chex) {
     cs.stroke = c.opaquer(0.5).rgbaString();
     return { raphAttr: cs };
 }
+function lineStyle(chex) {
+    var cs = {},
+        c = Color(chex);
+    cs.fill = c.clearer(0.75).rgbaString();
+    cs.stroke = c.opaquer(0.5).rgbaString();
+    cs['stroke-width'] = 1.5;
+    return { raphAttr: cs };
+}
 
 var CircleStyles = {
     normal: circleStyle("#1982a8"),
@@ -21,7 +29,7 @@ var CircleStyles = {
 };
 
 var ConnectorStyles = {
-    normal: circleStyle("#f00")
+    normal: lineStyle("#073436")
 };
 
 var Connectors = (function(){
@@ -208,6 +216,8 @@ var Circles = (function(){
         stroke: '#0f0',
         fill: 'rgba(0,255,0,0.2)',
         draw: true,
+        minRadius: 3,
+        maxRadius: 50,
         drag: true
     };
     
@@ -222,12 +232,28 @@ var Circles = (function(){
         this.rad = o.rad;
         this._draw = o.draw;
         this._drag = o.drag;
+        this.adjustableRadius = !!o.adjustableRadius;
+        this.minRadius = o.minRadius;
+        this.maxRadius = o.maxRadius;
         this.style = o.style;
         this.fill = o.fill;
         this.stroke = o.stroke;
         this._id = _.uniqueId('circle');
         this.connected = false;
         this.connectors = {};
+    }
+    Circle.prototype.adjustRadius = function(rdelta) {
+        if(!this.adjustableRadius || rdelta===0) {return;}
+        this.rad = this.rad + rdelta;
+        if(this.rad < this.minRadius) {
+            this.rad = this.minRadius;
+        } else if(this.rad > this.maxRadius) {
+            this.rad = this.maxRadius;
+        }
+        if(this.rc.attrs.r !== this.rad) {
+            this.rc.attr('r', this.rad);
+            calcDotsForCircle(this);
+        }
     }
     Circle.prototype.attributes = function(c) {
         return {
@@ -381,9 +407,17 @@ var Circles = (function(){
 	};
 })();
 
+function dotStyle(chex, o, o2) {
+    var cs = {},
+        c = Color(chex);
+    cs.stroke = c.clearer(o).rgbaString();
+    cs.fill = c.clearer(o2).rgbaString()
+    return { raphAttr: cs };
+}
+
 var DotStyles = {
-    normal: circleStyle('#e9d5f4'),
-    covered: circleStyle('#8f2fc6')
+    normal: dotStyle('#935fad', 0.25, 0.5),
+    covered: dotStyle('#2e234d', 0, 0.5)
 };
 
 var Dots = (function(){
