@@ -131,6 +131,25 @@ var StatBox = (function(){
             })
             .appendTo(parentNode);
     }
+    function showForGrid(c, showingDots, totalDots) {
+        statRect === undefined && _createStatRect();
+        var sdl = showingDots.length,
+            totl = totalDots.length,
+            rate = Math.floor(1000 * sdl / totl) / 10,
+            rateStr = "" + rate + "%";
+        var t = _.template("<p class='count'><%= showingCount %></p><p class='outof'><%= totalCount %></p><p class='percent'><%= rate %></p>")({
+            showingCount: sdl,
+            rate: rateStr,
+            totalCount: totl
+        });
+        statRect
+            .html(t)
+            .css({
+                left: c.xy[0] + c.rad + StatBoxDisplaySettings.leftPadding,
+                top: c.xy[1] - c.rad
+            })
+            .show();
+    }
     function showForCircle(c, showingDots, totalDots){
         statRect === undefined && _createStatRect();
         var sdl = showingDots.length,
@@ -157,6 +176,7 @@ var StatBox = (function(){
     }
     return {
         showForCircle: showForCircle,
+        showForGrid: showForGrid,
         fadeBox: fadeBox,
         active: active
     }
@@ -239,7 +259,8 @@ var Circles = (function(){
                 }
                 dot.update();
             });
-            StatBox.active && StatBox.showForCircle(circle, dotsInC2, Dots.list());
+            StatBox.active && !circle.connected && StatBox.showForCircle(circle, dotsInC2, Dots.list());
+            StatBox.active && circle.connected && StatBox.showForGrid(circle, dotsInC2, Dots.list());
         } //, 25);
         function dragMove(dx, dy){
             var newX = this.ox + dx,
@@ -422,9 +443,10 @@ var Nav = (function(){
         bs = [];
 
     function getNav(){
+        log("get nav");
         var d = rdiv.find('.navigation');
         if(d.length===0) {
-            d = $('<div />', {'class':'navigation'}).prependTo(rdiv);
+            d = $('<p />', {'class':'navigation'}).appendTo(rdiv);
         }
         return d;
     }
@@ -451,12 +473,13 @@ var Nav = (function(){
         bs = [];
     }
     function init(_rd){
-        rdiv = _rd;
+        rdiv = $(_rd);
     }
     function draw(){
+        var n = getNav();
         $(bs).each(function(i, x){
             button(x[0], x[1])
-                .appendTo(rdiv);
+                .appendTo(n);
         });
     }
     return {

@@ -8,6 +8,19 @@ header {
     background-color: #444;
     color: #fff;
 }
+.navigation {
+    display: inline;
+}
+.navigation a {
+    color: #ccc;
+    font-size: 11px;
+    text-decoration: none;
+    padding: 1px 5px;
+}
+.navigation a:hover {
+    background-color: #555;
+    color: #fff;
+}
 div#main {
     padding: 0;
     background-color: #ccc;
