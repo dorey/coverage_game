@@ -48,11 +48,11 @@ if(wmode === "1") {
     Dots.makeDots.apply(this, level1dots);
     
     var createFixedCircle = _.once(function(xy){
-        var c = Circles.createCircle({
+        var c = Circles.Circle({
             xy: xy,
             rad: 25,
             fixedRadius: true,
-            style: 'c1'
+            style: 'c3'
         });
     });
     main.click(function(evt){
@@ -71,28 +71,27 @@ if(wmode === "1") {
         function createNode(xy){
             clickCount++;
             if(clickCount === 1) {
-                cs[0] = Circles.createCircle({
+                cs[0] = Circles.Circle({
                     xy: xy,
                     rad: 20,
                     fixedRadius: true,
-                    style: 'c2'
+                    style: 'c1'
                 });
             } else if(clickCount === 2) {
-                cs[1] = Circles.createCircle({
+                cs[1] = Circles.Circle({
                     xy: xy,
                     rad: 20,
                     statBox: true,
                     fixedRadius: true,
-                    style: 'c2'
+                    style: 'c1'
                 });
                 Connectors.join(cs);
             }
         }
         main.click(function(evt){
-            clickCount < 2 && createNode([
-                evt.offsetX || evt.layerX,
-                evt.offsetY || evt.layerY
-                ]);
+            var x = evt.offsetX || evt.layerX;
+            var y = evt.offsetY || evt.layerY;
+            if (clickCount < 2) { createNode([x, y]); }
         });
     })();
 } else if(wmode === "4") {
@@ -105,14 +104,14 @@ if(wmode === "1") {
         function createNode(xy){
             clickCount++;
             if(clickCount === 1) {
-                cs[0] = Circles.createCircle({
+                cs[0] = Circles.Circle({
                     xy: xy,
                     rad: 20,
                     adjustableRadius: true,
                     style: 'c2'
                 });
             } else if(clickCount === 2) {
-                cs[1] = Circles.createCircle({
+                cs[1] = Circles.Circle({
                     xy: xy,
                     rad: 20,
                     statBox: true,

@@ -29,7 +29,7 @@ module("Raphael Test", {
 });
 
 test("Circles", function(){
-    var c = Circles.createCircle({
+    var c = Circles.Circle({
         xy: [450, 50],
         rad: 10
     });
@@ -42,7 +42,7 @@ test("Circles", function(){
 
 test("Grid Points", function(){
     equal(Circles.list().length, 0, "No circles");
-    var circle = Circles.createCircle({
+    var circle = Circles.Circle({
         xy: [50, 50],
         rad: 50
     });
@@ -79,8 +79,8 @@ test("Random Points", function(){
 
 test("Connect Circles", function(){
     var circles = [
-        Circles.createCircle({ xy: [20, 20], rad: 10 }),
-        Circles.createCircle({ xy: [60, 20], rad: 10 })
+        Circles.Circle({ xy: [20, 20], rad: 10 }),
+        Circles.Circle({ xy: [60, 20], rad: 10 })
     ];
     var connector = Connectors.join(circles);
     equal(40, connector.distance, "The distance was properly calculated to 40");
@@ -90,6 +90,27 @@ test("Connect Circles", function(){
     equal(1, Dots.inCircle(circles[0]).length, "This circle overlaps with one dot.");
     equal(1, circles[0].connectedCircles().length, "Circle.connectedCircles() returns one sibling.");
     equal(2, Dots.inGrid(circles[0]).length, "This grid overlaps with two dots.");
+});
+
+test("Circles with styles", function(){
+    Circles.Circle({
+        xy: [40, 40],
+        rad: 10,
+        style: 'c1',
+        text: 'C1'
+    });
+    Circles.Circle({
+        xy: [120, 40],
+        rad: 10,
+        style: 'c2',
+        text: 'C2'
+    });
+    Circles.Circle({
+        xy: [120, 70],
+        rad: 10,
+        style: 'c2',
+        text: 'C2'
+    });
 });
 
 module("Math Tests", {});
@@ -117,13 +138,13 @@ test("Dot Circle Placement", function(){
 });
 
 test("Costs", function(){
-    var c = Circles.createCircle({ xy: [20, 20], rad: 10, draw: false });
+    var c = Circles.Circle({ xy: [20, 20], rad: 10, draw: false });
     equal(123, Costs.circleCost(c), "Circle cost starts out as 123");
     equal(undefined, Costs.gridCost(c), "Because circle is alone, grid cost is undefined.");
 
     var cpair = [
-        Circles.createCircle({ xy: [20, 20], rad: 10, draw: false }),
-        Circles.createCircle({ xy: [50, 20], rad: 10, draw: false })
+        Circles.Circle({ xy: [20, 20], rad: 10, draw: false }),
+        Circles.Circle({ xy: [50, 20], rad: 10, draw: false })
     ];
     var connector = Connectors.join(cpair);
     equal(30, connector.distance, "The distance was properly calculated");

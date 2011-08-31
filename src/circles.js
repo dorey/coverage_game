@@ -7,13 +7,6 @@ function warn() {
 
 function R(){ return r; } //because i need to find a better way to pass the raphael object to the modules
 
-function circleStyle(chex) {
-    var cs = {},
-        c = Color(chex);
-    cs.fill = c.clearer(0.75).rgbaString();
-    cs.stroke = c.opaquer(0.5).rgbaString();
-    return { raphAttr: cs };
-}
 function lineStyle(chex) {
     var cs = {},
         c = Color(chex);
@@ -22,11 +15,6 @@ function lineStyle(chex) {
     cs['stroke-width'] = 1.5;
     return { raphAttr: cs };
 }
-
-var CircleStyles = {
-    normal: circleStyle("#1982a8"),
-    selected: circleStyle("#125770")
-};
 
 var ConnectorStyles = {
     normal: lineStyle("#073436")
@@ -126,6 +114,20 @@ var Costs = (function(){
 var StatBoxDisplaySettings = {
     leftPadding: 10
 };
+var Rates = (function(){
+    var d = {
+        distance: {
+            mult: 10,
+            unit: 'm'
+        }
+    };
+    function display(q) {
+        return '' + (Math.floor(q * d.distance.mult) / 10) + ' ' + d.distance.unit;
+    }
+    return {
+        display: display
+    }
+})();
 
 var StatBox = (function(){
     var active = false;
@@ -161,8 +163,14 @@ var StatBox = (function(){
             totl = totalDots.length,
             rate = Math.floor(1000 * sdl / totl) / 10,
             rateStr = "" + rate;
-        var t = _.template("<p class='count'><span class='fw-number num'><%= showingCount %></span></p><p><span class='fw-number denom'><%= totalCount %></span> | <span class='fw-number pct'><%= rate %></span>%</p>")({
+        var distance = _(c.connectors).chain()
+                            .values()
+                            .pluck('distance')
+                            .reduce(function(a, b){return a + b})
+                            .value();
+        var t = _.template("<p class='count'><span class='fw-number num'><%= showingCount %></span></p><p class='dist'><%= distance %></p><p><span class='fw-number denom'><%= totalCount %></span> | <span class='fw-number pct'><%= rate %></span>%</p>")({
             showingCount: sdl,
+            distance: Rates.display(distance), //(Rates.distance.mult * distance) + Rates.distance.unit,
             rate: rateStr,
             totalCount: totl
         });
@@ -210,37 +218,50 @@ var Circles = (function(){
         cidCount = 0,
         r, rd;
     
-    var circleDefaults = {
-        rad: 10,
-        style: 'normal',
-        stroke: '#0f0',
-        fill: 'rgba(0,255,0,0.2)',
-        draw: true,
-        minRadius: 3,
-        maxRadius: 50,
-        drag: true
-    };
-    
     function init(o) {
         r = o.r;
         rd = o.rd;
     }
+    function CircleStyle(c, cc) {
+        function calcRaphStyle(cs, cs2) {
+            var c = Color(cs);
+            if(cs2 !== "selected") {
+                c.clearer(0.5);
+            }
+            return {
+                stroke: c.clearer(0.25).rgbaString(),
+                fill: c.clearer(0.25).rgbaString()
+            };
+        }
+        var circleCodes = cc || {
+            normal: 'red',
+            c1: 'fuchsia',
+            c2: 'orange',
+            c3: 'blue'
+        };
+        return calcRaphStyle(circleCodes[c.style], c.styleClass);
+    }
     
+    var circleDefaults = {
+        drag: true,
+        draw: true
+    };
     function Circle(_o) {
-        var o = $.extend({}, circleDefaults, _o);
+        !_.include(circles, this) && circles.push(this);
+        var o = $.extend({}, circleDefaults, _o)
         this.xy = o.xy;
-        this.rad = o.rad;
-        this._draw = o.draw;
-        this._drag = o.drag;
+        this.rad = o.rad || 10;
         this.adjustableRadius = !!o.adjustableRadius;
-        this.minRadius = o.minRadius;
-        this.maxRadius = o.maxRadius;
-        this.style = o.style;
-        this.fill = o.fill;
-        this.stroke = o.stroke;
+        this.minRadius = o.minRadius || 3;
+        this.maxRadius = o.maxRadius || 50;
+        this.style = o.style || 'normal';
+        this.styleClass = o.styleClass || 'normal';
         this._id = _.uniqueId('circle');
         this.connected = false;
         this.connectors = {};
+        !!o.draw && this.draw();
+        !!o.draw && !!o.drag && this.listenDrag();
+        !!o.select && this.select({unique:true});
     }
     Circle.prototype.adjustRadius = function(rdelta) {
         if(!this.adjustableRadius || rdelta===0) {return;}
@@ -279,34 +300,30 @@ var Circles = (function(){
     Circle.prototype.isGrid = function(){
         return _.keys(this.connectors).length > 0;
     };
-    Circle.prototype.styleData = function(str) {
-        // if styleData receives a parameter, it sets the
-        // style string before returning the style data.
-        if (str !== undefined) { this.style = str; }
-        return CircleStyles[this.style] || CircleStyles.normal;
-    }
+    Circle.prototype.raphStyle = function() {
+        return CircleStyle(this);
+    };
     Circle.prototype.select = function(opts){
         if(opts===undefined) {opts = {};}
         !!opts.unique && _.invoke(selectedCircles(), 'unselect')
-        var style = this.styleData('selected');
-        this.rc
-            .attr(style.raphAttr);
+        this.styleClass = "selected";
+        this.rc && this.rc
+            .attr(this.raphStyle());
         this.selected = true;
     }
     Circle.prototype.unselect = function(){
-        var style = this.styleData('normal');
+        this.styleClass = "normal";
         this.rc
-            .attr(style.raphAttr);
+            .attr(this.raphStyle());
         this.selected = false;
     }
     Circle.prototype.draw = function(){
         var hr = this.rad / 2;
-        var style = this.styleData();
+        this._draw = true;
         this.rc = R()
             .circle(this.xy[0], this.xy[1], this.rad)
-            .attr(style.raphAttr);
+            .attr(this.raphStyle());
         calcDotsForCircle(this);
-        this.select({unique:true});
     }
     Circle.prototype.changeXY = function(xDelta, yDelta) {
         this.xy = [
@@ -323,11 +340,7 @@ var Circles = (function(){
     var calcDotsForCircle = _.throttle(function switchDots(circle){
         var dotsInC2 = Dots.inGrid(circle);
         _.each(Dots.list(), function(dot, i){
-            if(_.include(dotsInC2, dot)) {
-                dot.style = "covered";
-            } else {
-                dot.style = "normal";
-            }
+            dot.style = _.include(dotsInC2, dot) ? "covered" : "normal";
             dot.update();
         });
         StatBox.active && !circle.connected && StatBox.showForCircle(circle, dotsInC2, Dots.list());
@@ -355,6 +368,7 @@ var Circles = (function(){
             this.npO.xy = [this.attr('cx'), this.attr('cy')];
             StatBox.active && StatBox.fadeBox(15000);
         }
+        this._drag = true;
         if(this.rc !== undefined) {
             this.rc.npO = this;
             this.rc.drag(dragMove, dragStart, dragEnd);
@@ -364,6 +378,8 @@ var Circles = (function(){
         return Dots.inCircle(this);
     }
     function _inCircleCoords(crx, cry, crad, dx, dy) {
+        // var max = { x: crx + crad * 2, y: cry + crad * 2 };
+        // if(dx < crx || dx > max.x || dy < cry || dy > max.u) { return false; }
         var included = false;
 
         var yHemisphere = dy > cry,
@@ -378,12 +394,8 @@ var Circles = (function(){
         return included;
     }
 
-    function createCircle(opts) {
-        var c = new Circle(opts);
-        c._draw && c.draw();
-        c._draw && c._drag && c.listenDrag();
-        circles.push(c);
-        return c;
+    function CreateCircle(opts) {
+        return new Circle(opts);
     }
 
     function selectedCircles(){
@@ -397,7 +409,7 @@ var Circles = (function(){
 
 	return {
 	    init: init,
-	    createCircle: createCircle,
+	    Circle: CreateCircle,
 	    selectedCircles: selectedCircles,
 	    _inCircleCoords: _inCircleCoords,
 	    clear: clear,
@@ -416,7 +428,7 @@ function dotStyle(chex, o, o2) {
 }
 
 var DotStyles = {
-    normal: dotStyle('#935fad', 0.25, 0.5),
+    normal: dotStyle('#935fad', 0.6, 0.5),
     covered: dotStyle('#2e234d', 0, 0.5)
 };
 
