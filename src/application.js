@@ -29,6 +29,7 @@ Nav.init('header');
 Nav.addButton("1: Single", "window.location.search='mode=1'");
 Nav.addButton("2: Grid", "window.location.search='mode=2'");
 Nav.addButton("4: Adjustable Grid", "window.location.search='mode=4'");
+Nav.addButton("5: Choose your poison", "window.location.search='mode=5'");
 Nav.draw();
 
 var wSearchObj = (function(wls){
@@ -56,10 +57,9 @@ if(wmode === "1") {
         });
     });
     main.click(function(evt){
-        createFixedCircle([
-            evt.offsetX || evt.layerX,
-            evt.offsetY || evt.layerY
-            ]);
+        var x = evt.offsetX || evt.layerX,
+            y = evt.offsetY || evt.layerY;
+        createFixedCircle([x,y]);
     });
 } else if(wmode === "2") {
     (function(){
@@ -91,14 +91,13 @@ if(wmode === "1") {
         main.click(function(evt){
             var x = evt.offsetX || evt.layerX;
             var y = evt.offsetY || evt.layerY;
-            if (clickCount < 2) { createNode([x, y]); }
+            if (clickCount < 2) createNode([x, y]);
         });
     })();
 } else if(wmode === "4") {
     (function(){
         var level2dots = levelData[0].dots;
         Dots.makeDots.apply(this, level2dots);
-        StatBox.active = true;
         var clickCount = 0;
         var cs = [];
         function createNode(xy){
@@ -122,12 +121,61 @@ if(wmode === "1") {
             }
         }
         main.click(function(evt){
-            clickCount < 2 && createNode([
-                evt.offsetX || evt.layerX,
-                evt.offsetY || evt.layerY
-                ]);
+            var x = evt.offsetX || evt.layerX,
+                y = evt.offsetY || evt.layerY;
+            if (clickCount < 2) createNode([x, y]);
         });
     })();
+} else if(wmode === "5") {
+    (function(p){
+        var level2dots = levelData[0].dots;
+        Dots.makeDots.apply(this, level2dots);
+        $('<a />', {'text': ' [Single] '})
+            .click(function(evt){
+                main.bind('click.d1', function(evtI){
+                    var xy = [evtI.offsetX || evtI.layerX,
+                                evtI.offsetY || evtI.layerY];
+                    var c = Circles.Circle({
+                        xy: xy,
+                        rad: 25,
+                        fixedRadius: true,
+                        style: 'c3'
+                    });
+                    main.unbind('click.d1');
+                });
+                evt.stopPropagation();
+            }).appendTo(p);
+        $('<a />', {text: ' [Grid] '})
+            .click(function(evt){
+                var clickCount = 0, cs = [];
+                main.bind('click.d2', function(evtI){
+                    clickCount++;
+                    var xy = [evtI.offsetX || evtI.layerX,
+                                evtI.offsetY || evtI.layerY];
+                    if(clickCount === 1) {
+                        cs[0] = Circles.Circle({
+                            xy: xy,
+                            rad: 20,
+                            fixedRadius: true,
+                            style: 'c1'
+                        });
+                    } else if(clickCount === 2) {
+                        cs[1] = Circles.Circle({
+                            xy: xy,
+                            rad: 20,
+                            statBox: true,
+                            fixedRadius: true,
+                            style: 'c1'
+                        });
+                        Connectors.join(cs);
+                    } else {
+                        main.unbind('click.d2');
+                    }
+                });
+                evt.stopPropagation();
+            }).appendTo(p);
+        return p;
+    })($('<p />')).appendTo($('#main'));
 }
 
 Events.listenForArrows(function(direction, evt){
@@ -135,7 +183,7 @@ Events.listenForArrows(function(direction, evt){
         return i * (!!tf ? mult : 1);
     }
     var circ = Circles.selectedCircles().get(0);
-    if(circ==undefined) {
+    if(circ === undefined) {
         return;
     } else if(evt.altKey) {
         if(_.indexOf(['up', 'down'], direction) == -1) {
@@ -147,10 +195,10 @@ Events.listenForArrows(function(direction, evt){
         return circ.adjustRadius(adj);
     }
     var x=0, y=0;
-    direction === "up" && y--;
-    direction === "down" && y++;
-    direction === "left" && x--;
-    direction === "right" && x++;
+    if (direction === "up") y--;
+    if (direction === "down") y++;
+    if (direction === "left") x--;
+    if (direction === "right") x++;
     x = x * (evt.shiftKey ? 10 : 1);
     y = y * (evt.shiftKey ? 10 : 1);
     Circles.selectedCircles().get(0).changeXY(x, y);
