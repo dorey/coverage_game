@@ -16,23 +16,31 @@ function lineStyle(chex) {
     return { raphAttr: cs };
 }
 
-var ConnectorStyles = {
-    normal: lineStyle("#073436")
+var Styles1 = {
+    connector: {
+        normal: lineStyle("#073436")
+    }
 };
+var Styles2 = {
+    connector: {
+        normal: lineStyle("#073436")
+    }
+}
+var Styles = Styles1;
 
 var Connectors = (function(){
     function Connector(id, circles, style){
         this.id = id;
         this.circles = circles;
-        _.invoke(this.circles, '_addConnector', this)
+        _.invoke(this.circles, '_addConnector', this);
         this.style = style;
     }
     Connector.prototype.styleData = function(str) {
         // if styleData receives a parameter, it sets the
         // style string before returning the style data.
         if (str !== undefined) { this.style = str; }
-        return ConnectorStyles[this.style] || ConnectorStyles.normal;
-    }
+        return Styles.connector[this.style] || Styles.connector.normal;
+    };
 
     function getDistanceBetweenCoords(coords) {
         var xDiff = Math.abs(coords[0][0] - coords[1][0]);
@@ -43,30 +51,30 @@ var Connectors = (function(){
         return _.map(this.circles, function(circle, i){
             return circle.xy;
         });
-    }
+    };
     Connector.prototype._calcDistance = function(){
         var coords = this.coordinates();
         this.distance = getDistanceBetweenCoords(coords);
-    }
+    };
     Connector.prototype.coordPath = function() {
         var coords = this.coordinates();
         return 'M' + _.invoke(coords, 'join', ',').join('L');
-    }
+    };
     Connector.prototype._createPath = function(){
         var style = this.styleData();
         this.path = R()
             .path(this.coordPath())
             .attr(style.raphAttr);
-    }
+    };
     Connector.prototype._updatePath = function(){
         this.coords = undefined;
         this._calcDistance();
         this.path
             .attr('path', this.coordPath());
-    }
+    };
     Connector.prototype.draw = function(){
-        this.path === undefined && this._createPath();
-    }
+        if (this.path === undefined) this._createPath();
+    };
 
     var connectors = {};
     function join(carr){
@@ -75,8 +83,8 @@ var Connectors = (function(){
         connectors[cjId] = c;
         c._calcDistance();
         // If all the circles are drawn, then draw the connector.
-        _(carr).chain().pluck('_draw').all(_.identity)
-            .value() && c.draw();
+        if (_(carr).chain().pluck('_draw').all(_.identity)
+            .value()) c.draw();
         return c;
     }
     function clear() {
@@ -85,7 +93,7 @@ var Connectors = (function(){
     return {
         clear: clear,
         join: join
-    }
+    };
 })();
 
 var Costs = (function(){
@@ -108,7 +116,7 @@ var Costs = (function(){
         unit: unit,
         circleCost: circleCost,
         gridCost: gridCost
-    }
+    };
 })();
 
 var StatBoxDisplaySettings = {
@@ -126,7 +134,7 @@ var Rates = (function(){
     }
     return {
         display: display
-    }
+    };
 })();
 
 var StatBox = (function(){
@@ -154,11 +162,11 @@ var StatBox = (function(){
         statRect.css({
             left: extremes.maxX + StatBoxDisplaySettings.leftPadding,
             top: extremes.minY
-        })
-    };
+        });
+    }
     var debounceRecalcGridCoords = _.debounce(recalcGridCoords, 50);
     function showForGrid(c, showingDots, totalDots) {
-        statRect === undefined && _createStatRect();
+        if(statRect === undefined) _createStatRect();
         var sdl = showingDots.length,
             totl = totalDots.length,
             rate = Math.floor(1000 * sdl / totl) / 10,
@@ -166,7 +174,7 @@ var StatBox = (function(){
         var distance = _(c.connectors).chain()
                             .values()
                             .pluck('distance')
-                            .reduce(function(a, b){return a + b})
+                            .reduce(function(a, b){ return a + b; })
                             .value();
         var t = _.template("<p class='count'><span class='fw-number num'><%= showingCount %></span></p><p class='dist'><%= distance %></p><p><span class='fw-number denom'><%= totalCount %></span> | <span class='fw-number pct'><%= rate %></span>%</p>")({
             showingCount: sdl,
@@ -182,7 +190,7 @@ var StatBox = (function(){
             .show();
     }
     function showForCircle(c, showingDots, totalDots){
-        statRect === undefined && _createStatRect();
+        if (statRect === undefined) _createStatRect();
         var sdl = showingDots.length,
             totl = totalDots.length,
             rate = Math.floor(1000 * sdl / totl) / 10,
@@ -210,14 +218,12 @@ var StatBox = (function(){
         showForGrid: showForGrid,
         fadeBox: fadeBox,
         active: active
-    }
+    };
 })();
-
 var Circles = (function(){
     var circles = [],
         cidCount = 0,
         r, rd;
-    
     function init(o) {
         r = o.r;
         rd = o.rd;
@@ -406,16 +412,13 @@ var Circles = (function(){
     function clear() {
         circles = [];
     }
-
 	return {
-	    init: init,
 	    Circle: CreateCircle,
 	    selectedCircles: selectedCircles,
 	    _inCircleCoords: _inCircleCoords,
 	    clear: clear,
-	    list: function(){
-	        return circles;
-	    }
+	    init: init,
+	    list: function(){ return circles; }
 	};
 })();
 
@@ -423,7 +426,7 @@ function dotStyle(chex, o, o2) {
     var cs = {},
         c = Color(chex);
     cs.stroke = c.clearer(o).rgbaString();
-    cs.fill = c.clearer(o2).rgbaString()
+    cs.fill = c.clearer(o2).rgbaString();
     return { raphAttr: cs };
 }
 
@@ -509,9 +512,10 @@ var Dots = (function(){
         makeDots: makeDots,
         inCircle: inCircle,
         inGrid: inGrid,
+//        _inCircleCoords: _inCircleCoords,
         list: list,
         clear: clear
-    }
+    };
 })();
 
 var Events = (function(){
