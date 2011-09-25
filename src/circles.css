@@ -1,7 +1,7 @@
-body {
+html body {
     font-family: Arial;
     margin: 0;
-    padding: 0;
+    padding: 40px 0 0 0;
 }
 header {
     padding: 5px 12px;

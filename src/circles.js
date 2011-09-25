@@ -558,7 +558,9 @@ var Nav = (function(){
         return rdiv;
     }
     function clearNav() {
-        !!rdiv && rdiv.empty()
+        if(rdiv!==undefined) {
+            rdiv.empty();
+        }
     }
     function button(txt, evt){
         var li = $('<li />');
