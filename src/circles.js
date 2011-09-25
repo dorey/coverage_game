@@ -28,6 +28,51 @@ var Styles2 = {
 }
 var Styles = Styles1;
 
+function getConnectorStyle(t) {
+    return Styles.connector[t] || Styles.connector.normal;
+}
+
+var StatBoxDisplaySettings = {
+    leftPadding: 10
+};
+
+function getCircleStyle(c, cc) {
+    function calcRaphStyle(cs, cs2) {
+        var c = Color(cs);
+        if(cs2 !== "selected") {
+            c.clearer(0.5);
+        }
+        return {
+            stroke: c.clearer(0.25).rgbaString(),
+            fill: c.clearer(0.25).rgbaString()
+        };
+    }
+    var circleCodes = cc || {
+        normal: 'red',
+        c1: 'fuchsia',
+        c2: 'orange',
+        c3: 'blue'
+    };
+    return calcRaphStyle(circleCodes[c.style], c.styleClass);
+}
+
+function dotStyle(chex, o, o2) {
+    var cs = {},
+        c = Color(chex);
+    cs.stroke = c.clearer(o).rgbaString();
+    cs.fill = c.clearer(o2).rgbaString();
+    return { raphAttr: cs };
+}
+
+function getDotStyle(style) {
+    var DotStyles = {
+        normal: dotStyle('#935fad', 0.6, 0.5),
+        covered: dotStyle('#2e234d', 0, 0.5)
+    };
+    return DotStyles[style] || DotStyles.normal;
+}
+
+
 var Connectors = (function(){
     function Connector(id, circles, style){
         this.id = id;
@@ -39,7 +84,7 @@ var Connectors = (function(){
         // if styleData receives a parameter, it sets the
         // style string before returning the style data.
         if (str !== undefined) { this.style = str; }
-        return Styles.connector[this.style] || Styles.connector.normal;
+        return getConnectorStyle(this.style)
     };
 
     function getDistanceBetweenCoords(coords) {
@@ -119,9 +164,6 @@ var Costs = (function(){
     };
 })();
 
-var StatBoxDisplaySettings = {
-    leftPadding: 10
-};
 var Rates = (function(){
     var d = {
         distance: {
@@ -220,6 +262,7 @@ var StatBox = (function(){
         active: active
     };
 })();
+
 var Circles = (function(){
     var circles = [],
         cidCount = 0,
@@ -228,26 +271,6 @@ var Circles = (function(){
         r = o.r;
         rd = o.rd;
     }
-    function CircleStyle(c, cc) {
-        function calcRaphStyle(cs, cs2) {
-            var c = Color(cs);
-            if(cs2 !== "selected") {
-                c.clearer(0.5);
-            }
-            return {
-                stroke: c.clearer(0.25).rgbaString(),
-                fill: c.clearer(0.25).rgbaString()
-            };
-        }
-        var circleCodes = cc || {
-            normal: 'red',
-            c1: 'fuchsia',
-            c2: 'orange',
-            c3: 'blue'
-        };
-        return calcRaphStyle(circleCodes[c.style], c.styleClass);
-    }
-    
     var circleDefaults = {
         drag: true,
         draw: true
@@ -307,7 +330,7 @@ var Circles = (function(){
         return _.keys(this.connectors).length > 0;
     };
     Circle.prototype.raphStyle = function() {
-        return CircleStyle(this);
+        return getCircleStyle(this);
     };
     Circle.prototype.select = function(opts){
         if(opts===undefined) {opts = {};}
@@ -399,11 +422,9 @@ var Circles = (function(){
         }
         return included;
     }
-
     function CreateCircle(opts) {
         return new Circle(opts);
     }
-
     function selectedCircles(){
         return $(circles).filter(function(){
             return this.selected;
@@ -421,19 +442,6 @@ var Circles = (function(){
 	    list: function(){ return circles; }
 	};
 })();
-
-function dotStyle(chex, o, o2) {
-    var cs = {},
-        c = Color(chex);
-    cs.stroke = c.clearer(o).rgbaString();
-    cs.fill = c.clearer(o2).rgbaString();
-    return { raphAttr: cs };
-}
-
-var DotStyles = {
-    normal: dotStyle('#935fad', 0.6, 0.5),
-    covered: dotStyle('#2e234d', 0, 0.5)
-};
 
 var Dots = (function(){
     var DotList = [];
@@ -453,7 +461,7 @@ var Dots = (function(){
         // if styleData receives a parameter, it sets the
         // style string before returning the style data.
         if (str !== undefined) { this.style = str; }
-        return DotStyles[this.style] || DotStyles.normal;
+        return getDotStyle(this.style);
     }
     Dot.prototype._createRaphaelDot = function(){
         var style = this.styleData();
@@ -512,7 +520,6 @@ var Dots = (function(){
         makeDots: makeDots,
         inCircle: inCircle,
         inGrid: inGrid,
-//        _inCircleCoords: _inCircleCoords,
         list: list,
         clear: clear
     };
