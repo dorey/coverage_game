@@ -555,6 +555,7 @@ var Nav = (function(){
         bs = [];
 
     function getNav(){
+        return rdiv;
         var d = rdiv.find('.navigation');
         if(d.length===0) {
             d = $('<p />', {'class':'navigation'}).appendTo(rdiv);
@@ -565,7 +566,8 @@ var Nav = (function(){
         $(rdiv).find('.navigation').empty();
     }
     function button(txt, evt){
-        return $('<a />', {'class':'button'})
+        var li = $('<li />');
+        $('<a />', {'class':'button'})
             .attr('href', '#')
             .text(txt)
             .click(function(){
@@ -574,7 +576,9 @@ var Nav = (function(){
                 } else if(typeof evt === "string") {
                     eval(evt);
                 }
-            });
+            })
+            .appendTo(li);
+        return li;
     }
     function addButton(t, fn){
         bs.push([t, fn]);

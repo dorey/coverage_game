@@ -25,7 +25,7 @@ $.ajax({
     levelData = d;
 });
 
-Nav.init('header');
+Nav.init('.nav');
 Nav.addButton("1: Single", "window.location.search='mode=1'");
 Nav.addButton("2: Grid", "window.location.search='mode=2'");
 Nav.addButton("4: Adjustable Grid", "window.location.search='mode=4'");
