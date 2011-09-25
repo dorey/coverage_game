@@ -8,6 +8,7 @@
         <![endif]-->
 		<link rel="stylesheet" href="libs/qunit.css" type="text/css" charset="utf-8">
 		<link rel="stylesheet" href="src/circles.css" type="text/css" charset="utf-8">
+		<link rel="stylesheet" href="bootstrap.min.css" type="text/css" charset="utf-8">
 		<script src="libs/underscore.js" type="text/javascript" charset="utf-8"></script>
 		<script src="libs/color.js" type="text/javascript" charset="utf-8"></script>
 		<script src="src/circles.js" type="text/javascript" charset="utf-8"></script>
@@ -19,13 +20,28 @@
 		</script>
 </head>
 <body>
-	<div id="np"></div>
-	<h1 id="qunit-header">QUnit Testing of NMIS Map</h1>
-	<h2 id="qunit-banner"></h2>
-	<div id="qunit-testrunner-toolbar"></div>
-	<h2 id="qunit-userAgent"></h2>
-	<ol id="qunit-tests"></ol>
-	<div id="qunit-fixture">test markup</div>
+	<div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <a class="brand" href="#">Circles Tests</a>
+          <ul class="nav">
+          </ul>
+        </div>
+      </div>
+    </div>
+	<div class="container">
+		<div style="height:40px;">
+		</div>
+		<div id="main" class="row">
+			<div id="np"></div>
+			<h1 id="qunit-header">QUnit Testing of NMIS Map</h1>
+			<h2 id="qunit-banner"></h2>
+			<div id="qunit-testrunner-toolbar"></div>
+			<h2 id="qunit-userAgent"></h2>
+			<ol id="qunit-tests"></ol>
+			<div id="qunit-fixture">test markup</div>
+		</div>
+	</div>
 	<script type="text/javascript" charset="utf-8">
 	var rd = $('#np')
 		.width(600)

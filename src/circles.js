@@ -556,14 +556,9 @@ var Nav = (function(){
 
     function getNav(){
         return rdiv;
-        var d = rdiv.find('.navigation');
-        if(d.length===0) {
-            d = $('<p />', {'class':'navigation'}).appendTo(rdiv);
-        }
-        return d;
     }
     function clearNav() {
-        $(rdiv).find('.navigation').empty();
+        !!rdiv && rdiv.empty()
     }
     function button(txt, evt){
         var li = $('<li />');
