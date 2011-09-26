@@ -601,6 +601,9 @@ var Nav = (function(){
     }
     function init(_rd){
         rdiv = $(_rd);
+        var rdd = rdiv.find('.dropdown');
+        rdd.dropdown !== undefined &&
+            rdd.dropdown();
     }
     function draw(){
         var n = getNav();

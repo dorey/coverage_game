@@ -133,7 +133,8 @@ if(wmode === "1") {
     (function(p){
         var level2dots = levelData[0].dots;
         Dots.makeDots.apply(this, level2dots);
-        $('<a />', {'text': ' [Single] '})
+        $('<a />', {'text': 'Single'})
+            .addClass('btn')
             .click(function(evt){
                 main.bind('click.d1', function(evtI){
                     var xy = [evtI.offsetX || evtI.layerX,
@@ -148,7 +149,8 @@ if(wmode === "1") {
                 });
                 evt.stopPropagation();
             }).appendTo(p);
-        $('<a />', {text: ' [Grid] '})
+        $('<a />', {text: 'Grid'})
+            .addClass('btn')
             .click(function(evt){
                 var clickCount = 0, cs = [];
                 main.bind('click.d2', function(evtI){
