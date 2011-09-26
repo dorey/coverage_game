@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>Coverage Circles</title>
+        <title>Coverage Circles - Dot Creator</title>
         <!--[if IE]>
                 <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
+		<link rel="stylesheet" href="libs/bp-style.css" type="text/css" charset="utf-8">
 		<link rel="stylesheet" href="src/circles.css" type="text/css" charset="utf-8">
 		<link rel="stylesheet" href="bootstrap.min.css" type="text/css" charset="utf-8">
 </head>
@@ -28,6 +29,37 @@
 	<script src="src/circles.js" type="text/javascript" charset="utf-8"></script>
 	<script src="libs/jquery-1.6.2-min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="libs/raphael-min.js" type="text/javascript" charset="utf-8"></script>
-	<script src="src/application.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" charset="utf-8">
+		var main = $('div#main').eq(0);
+		window.r = Raphael(main.get(0), main.width(), main.height());
+		
+		var createFixedCircle = _.once(function(xy){
+		    var c = Circles.createCircle({
+		        xy: xy,
+		        rad: 50
+		    });
+		});
+		
+		function createDot(xy){
+			Dots.makeDots(xy);
+		}
+
+		main.click(function(evt){
+			createDot([evt.offsetX, evt.offsetY]);
+		});
+		var li = $('<li />');
+		$('<a>')
+			.attr('href', '#')
+			.text('Export Dot List')
+			.click(function(){
+				main.empty();
+				$('<textarea>')
+					.text(JSON.stringify(_.pluck(Dots.list(), 'xy')))
+					.appendTo(main);
+			})
+			.appendTo(li);
+		$('ul.nav')
+			.append(li);
+	</script>
 </body>
 </html>

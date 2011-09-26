@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>test</title>
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+		<link rel="stylesheet" href="libs/qunit.css" type="text/css" charset="utf-8">
+		<link rel="stylesheet" href="src/circles.css" type="text/css" charset="utf-8">
+		<link rel="stylesheet" href="bootstrap.min.css" type="text/css" charset="utf-8">
+		<script src="libs/underscore.js" type="text/javascript" charset="utf-8"></script>
+		<script src="libs/color.js" type="text/javascript" charset="utf-8"></script>
+		<script src="src/circles.js" type="text/javascript" charset="utf-8"></script>
+		<script src="libs/jquery-1.6.2-min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="libs/qunit.js" type="text/javascript" charset="utf-8"></script>
+		<script src="libs/raphael-min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" charset="utf-8">
+			var testScripts = ["circles"];
+		</script>
+</head>
+<body>
+	<div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <a class="brand" href="#">Circles Tests</a>
+          <ul class="nav">
+          </ul>
+        </div>
+      </div>
+    </div>
+	<div class="container">
+		<div id="main" class="row">
+			<div id="np"></div>
+			<h1 id="qunit-header">QUnit Testing of NMIS Map</h1>
+			<h2 id="qunit-banner"></h2>
+			<div id="qunit-testrunner-toolbar"></div>
+			<h2 id="qunit-userAgent"></h2>
+			<ol id="qunit-tests"></ol>
+			<div id="qunit-fixture">test markup</div>
+		</div>
+	</div>
+	<script type="text/javascript" charset="utf-8">
+	var rd = $('#np')
+		.width(600)
+		.height(200);
+	var r = Raphael(rd.get(0), rd.width(), rd.height());
+	</script>
+	<script type="text/javascript" charset="utf-8">
+		function loadNextTest(){
+			var s = testScripts.shift();
+			s !== undefined &&
+				$.getScript("tests/test_"+s+".js")
+					.done(loadNextTest);
+		}
+		loadNextTest();
+	</script>
+</body>
+</html>
