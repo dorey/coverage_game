@@ -562,6 +562,21 @@ var Nav = (function(){
             rdiv.empty();
         }
     }
+    function setPageTitle(pageTitle, lnk) {
+        var siteTitle = $('.topbar a.brand').text();
+        (function(h3){
+            h3.empty();
+            $('<a />', {'href':'./'})
+                .text(siteTitle)
+                .appendTo(h3);
+            $('<span />')
+                .addClass('spchar')
+                .appendTo(h3);
+            $('<a />', {'href': '#'})
+                .text(pageTitle)
+                .appendTo(h3);
+        })($('.topbar h3'));
+    }
     function button(txt, evt){
         var li = $('<li />');
         $('<a />', {'class':'button'})
@@ -598,6 +613,7 @@ var Nav = (function(){
         addButton: addButton,
         draw: draw,
         init: init,
+        setPageTitle: setPageTitle,
         clear: clear
     }
 })();

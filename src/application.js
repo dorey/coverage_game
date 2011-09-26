@@ -47,7 +47,7 @@ StatBox.active = true;
 if(wmode === "1") {
     var level1dots = levelData[0].dots;
     Dots.makeDots.apply(this, level1dots);
-    
+    Nav.setPageTitle("Mode 1", "./?mode=1");
     var createFixedCircle = _.once(function(xy){
         var c = Circles.Circle({
             xy: xy,
@@ -62,6 +62,7 @@ if(wmode === "1") {
         createFixedCircle([x,y]);
     });
 } else if(wmode === "2") {
+    Nav.setPageTitle("Mode 2", "./?mode=2");
     (function(){
         var level2dots = levelData[0].dots;
         Dots.makeDots.apply(this, level2dots);
@@ -95,6 +96,7 @@ if(wmode === "1") {
         });
     })();
 } else if(wmode === "4") {
+    Nav.setPageTitle("Mode 4", "./?mode=4");
     (function(){
         var level2dots = levelData[0].dots;
         Dots.makeDots.apply(this, level2dots);
@@ -127,6 +129,7 @@ if(wmode === "1") {
         });
     })();
 } else if(wmode === "5") {
+    Nav.setPageTitle("Mode 5", "./?mode=5");
     (function(p){
         var level2dots = levelData[0].dots;
         Dots.makeDots.apply(this, level2dots);
