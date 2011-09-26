@@ -54,3 +54,13 @@ div#main {
     display: inline;
     width: 40px;
 }
+
+.topbar h3 span.spchar {
+    display: block;
+    float: left;
+    font-size: 20px;
+    font-weight: 200;
+    margin-left: -20px;
+    padding: 8px 20px 12px;
+    line-height: 1
+}
